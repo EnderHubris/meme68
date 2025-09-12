@@ -112,6 +112,9 @@
 
                     const link = document.createElement('a');
                     link.href = `/images/${src}`;
+                    if (base !== "/") {
+                        link.href = base + `/images/${src}`;
+                    }
                     link.target = "_blank";
 
                     // Image wrapper to maintain uniform height
