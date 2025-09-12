@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Gallery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-img-top {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .card-body {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .col.d-flex {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container my-4">
+        <h1 class="mb-4">Meme Gallery</h1>
+        <div id="card-container" class="row g-3"></div>
+    </div>
+
+    <script>
+        fetch('/images.json')
+            .then(res => res.json())
+            .then(images => {
+                const container = document.getElementById('card-container');
+                images.forEach(src => {
+                    const col = document.createElement('div');
+                    col.className = 'col-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 d-flex';
+
+                    const card = document.createElement('div');
+                    card.className = 'card w-100';
+
+                    const link = document.createElement('a');
+                    link.href = `/images/${src}`;
+                    link.target = "_blank";
+
+                    const img = document.createElement('img');
+                    img.src = `/images/${src}`;
+                    img.alt = src;
+                    img.className = 'card-img-top';
+
+                    link.appendChild(img);
+
+                    const body = document.createElement('div');
+                    body.className = 'card-body';
+                    body.innerHTML = `<p class="card-text">${src}</p>`;
+
+                    card.appendChild(link);
+                    card.appendChild(body);
+                    col.appendChild(card);
+                    container.appendChild(col);
+                });
+            })
+            .catch(err => console.error('Failed to load images:', err));
+    </script>
+</body>
+
+</html>
