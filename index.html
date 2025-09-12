@@ -96,7 +96,7 @@
         let jsonFile = "/images.json";
 
         if (base !== "/") {
-            jsonFile = base + jsonFile;
+            jsonFile = base + "/images.json";
         }
 
         fetch(jsonFile)
@@ -119,10 +119,10 @@
                     imgWrapper.className = 'card-img-wrapper';
 
                     const img = document.createElement('img');
-                    
+
                     img.src = `/images/${src}`;
                     if (base !== "/") {
-                        img.src = base + img.src;
+                        img.src = base + `/images/${src}`;
                     }
 
                     img.alt = src;
