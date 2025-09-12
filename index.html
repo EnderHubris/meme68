@@ -91,7 +91,15 @@
     </div>
 
     <script>
-        fetch('/images.json')
+        // needed for github pages
+        const base = window.location.pathname.replace(/\/[^/]*$/, '/');
+        let jsonFile = "/images.json";
+
+        if (base !== "/") {
+            jsonFile = base + jsonFile;
+        }
+
+        fetch(jsonFile)
             .then(res => res.json())
             .then(images => {
                 const container = document.getElementById('card-container');
@@ -111,7 +119,12 @@
                     imgWrapper.className = 'card-img-wrapper';
 
                     const img = document.createElement('img');
+                    
                     img.src = `/images/${src}`;
+                    if (base !== "/") {
+                        img.src = base + img.src;
+                    }
+
                     img.alt = src;
                     img.className = 'card-img-top';
 
