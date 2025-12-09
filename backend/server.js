@@ -2,7 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from "cors";
 
-import { RegisterUser, LoginUser, LogoutUser, VerifySession } from './db.js';
+import { RegisterUser, LoginUser, LogoutUser, VerifySession, IsAdmin } from './db.js';
 
 const app = express();
 const PORT = 4000;
@@ -45,7 +45,7 @@ app.get('/verify_auth', async (req, res) => {
         const IP = req.ip;
         if (sessid) {
             const valid = await VerifySession(sessid,IP);
-            
+
             if (valid) {
                 console.log("Session Verified!");
             } else {
@@ -57,7 +57,44 @@ app.get('/verify_auth', async (req, res) => {
             });
         }
         return res.json({
-            message: "Invalid Session"
+            message: "No Existing Session"
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).text("An unexpected error occurred.");
+    }
+});
+app.get('/is_admin', async (req, res) => {
+    try {
+        console.log("[ADMIN CHECK] Checking if user is ADMIN");
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                console.log("[ADMIN CHECK] Session Verified!");
+                console.log("[ADMIN CHECK] Checking Ownership. . .");
+                is_admin = await IsAdmin(sessid, IP);
+            } else {
+                console.log("[ADMIN CHECK] Invalid Session!");
+            }
+
+            if (is_admin) {
+                console.log("[ADMIN CHECK] User is an ADMIN!");
+            } else {
+                console.log("[ADMIN CHECK] User is NOT ADMIN!");
+            }
+
+            return res.json({
+                is_admin: is_admin
+            });
+        }
+        
+        console.log("[ADMIN CHECK] User is NOT ADMIN!");
+        return res.json({
+            is_admin: false
         });
     } catch (err) {
         console.error(err);

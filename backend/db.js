@@ -21,11 +21,25 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
+/**
+ * Alias Function to Query Database
+ *
+ * @param {string} sql - SQL-Query with PlaceHolders
+ * @param {Array} params
+ * @returns {mysql.QueryResult} MySQL rows array
+**/
 async function query(sql, params) {
     const [rows] = await db.execute(sql, params);
     return rows; // rows is an array of objects
 }
 
+/**
+ * Takes in a user's SESSID cookie and verifies it belongs to them
+ * 
+ * @param {string} sid - SESSID cookie value
+ * @param {string} IP - IP address extracted from web-request
+ * @returns {Boolean} Finishes after session validity
+**/
 export async function VerifySession(sid, IP) {
     const sig = GenerateSignature(IP);
     if (sid && sig) {
@@ -39,6 +53,44 @@ export async function VerifySession(sid, IP) {
     return false;
 }
 
+/**
+ * Takes a user's SESSID cookie and verifies that the SESSID
+ * is both theirs AND if the owner of the session is an admin
+ * 
+ * @param {string} sid - SESSID cookie value
+ * @param {string} IP - IP address extracted from web-request
+ * @returns {Boolean} Finishes after session validity
+**/
+export async function IsAdmin(sid, IP) {
+    const sig = GenerateSignature(IP);
+    if (sid && sig) {
+        console.log(`Searching for Session with following (sid,sig) -> (${sid},${sig})`);
+        const sessData = await query(
+            "SELECT sid,uid FROM sessions WHERE (sid = ? AND signature = ?) LIMIT 1",
+            [sid, sig]
+        );
+
+        if (sessData.length == 0) return false;
+        const data = sessData[0];
+
+        const userData = await query(
+            "SELECT username,admin FROM users WHERE id = ?",
+            [data.uid]
+        );
+        // DB treats booleans as: 0 | 1 => false | true
+        return userData.length > 0 && (userData[0].admin === 1);
+    }
+    return false;
+}
+
+/**
+ * Takes in username|email, password, and IP address to authenticate a user
+ * 
+ * @param {string} name - username or email
+ * @param {string} password - plain-text password
+ * @param {string} IP - IP address extracted from web-request
+ * @returns {Promise<String|null>} Returns SESSID string if possible, otherwise return null
+**/
 // user can use username or email with their password to login
 export async function LoginUser(name, password, IP) {
     try {
@@ -67,6 +119,13 @@ export async function LoginUser(name, password, IP) {
     }
 }
 
+/**
+ * Takes in user data from the database and the IP of the user to create a new session
+ * 
+ * @param {{id: number, username: string}} user - username or email
+ * @param {string} IP - IP address extracted from web-request
+ * @returns {JSON} Returns session JSON if possible, otherwise return null
+**/
 async function CreateSession(user, IP) {
     try {
         const sid = GenerateSID();
@@ -114,7 +173,14 @@ async function CreateSession(user, IP) {
     }
 }
 
-// check if the session is expired
+/**
+ * Checks if a session has expired, returns session if not expired OR removes the
+ * expired session from the database to replace it with a new session
+ * 
+ * @param { {sid: string, sig: string, created_at: any, expires_at: any } } sess - Session Data JSON
+ * @param {string} IP - IP address extracted from web-request
+ * @returns {JSON|null} Returns session JSON if possible, otherwise return null
+**/
 async function CheckSession(sess, IP) {
     try {
         if (!sess) return;
@@ -152,9 +218,22 @@ async function CheckSession(sess, IP) {
     }
 }
 
+/**
+ * Given a session id logout the user and delete their session form the database
+ * 
+ * @param {string} sid - SESSID cookie value
+ * @returns {Promise<boolean>} Returns if the logout was successful
+**/
 export async function LogoutUser(sid) {
     return await DeleteSession(sid);
 }
+
+/**
+ * Given a session id delete the session from the database
+ * 
+ * @param {string} sid - session id we want to remove
+ * @returns {boolean} Returns whether the session deletion was successful
+**/
 async function DeleteSession(sid) {
     const result = await query(
         "DELETE FROM sessions WHERE sid = ?",
@@ -168,6 +247,14 @@ async function DeleteSession(sid) {
     }
 }
 
+/**
+ * Given user's basic info and their IP query the database to find their session if once exists
+ * if a session cannot be found we create a new session and return it
+ * 
+ * @param {{id: number, username: string}} user - JSON blob with user-id and username
+ * @param {string} IP - IP address extracted from web-request
+ * @returns {JSON | null} Returns session JSON or null if a session cannot be found
+**/
 async function GetSession(user, IP) {
     try {
         // check if user has a session in the DB
@@ -203,6 +290,14 @@ async function GetSession(user, IP) {
     }
 }
 
+/**
+ * Takes in username, email, and plain-text password to attempt creating a new user-account
+ * 
+ * @param {string} username - username
+ * @param {string} email - email
+ * @param {string} password - plain-text password
+ * @returns {Promise<boolean>} Returns if the user was successfully created in the database
+**/
 export async function RegisterUser(username, email, password) {
     try {
         if (await UserExists(username, email)) {
@@ -232,6 +327,13 @@ export async function RegisterUser(username, email, password) {
     }
 }
 
+/**
+ * Determine if a user already exists by checking if a username or email is taken
+ * 
+ * @param {string} username - username
+ * @param {string} email - email
+ * @returns {Promise<boolean>} Returns if a user exists
+**/
 async function UserExists(username, email) {
     try {
         const rows = await query(
@@ -240,6 +342,7 @@ async function UserExists(username, email) {
         );
         return rows.length > 0;
     } catch (err) {
+        // for safety assume user exists
         console.error(`Error: ${err}`);
         return true;
     }

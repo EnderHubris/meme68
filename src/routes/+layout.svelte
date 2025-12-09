@@ -1,28 +1,20 @@
 <script lang="ts">
+/* 
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@ THIS LAYOUT IS APPLIED TO ALL PAGES WITHIN THE PROJECT @@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+*/
 	import favicon from '$lib/assets/favicon.svg';
 
     import { onMount } from 'svelte';
     import { afterNavigate } from '$app/navigation';
+    
+    import { handleLogout } from '$lib/auth';
 
     import "bootstrap/dist/css/bootstrap.min.css";
 
 	let { children } = $props();
     let loggedOn = $state(false); // state variables can be used to do conditioned-HTML-rendering
-
-    const handleLogout = async () => {
-        const response = await fetch(`http://localhost:4000/logout`, {
-            method: "GET",
-            credentials: 'include'  // ensures cookies are sent
-        });
-
-        const data = await response.json();
-        
-        console.log(data);
-
-        if (data && data.success) {
-            window.location.href = '/';
-        }
-    }
 
     let verifying = $state(false);
     async function Verify() {
