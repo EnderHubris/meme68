@@ -15,36 +15,38 @@
 
 	let { children } = $props();
     let loggedOn = $state(false); // state variables can be used to do conditioned-HTML-rendering
-
     let verifying = $state(false);
+
     async function Verify() {
-        // bottle neck number of times this function executes on client-side
         if (verifying) return;
         verifying = true;
 
-        const response = await fetch(`http://localhost:4000/verify_auth`, {
+        const response = await fetch("http://localhost:4000/verify_auth", {
             method: "GET",
-            credentials: 'include'  // ensures cookies are sent
+            credentials: "include"
         });
+
         const data = await response.json();
-        if (data) {
-            loggedOn = data.message !== "Invalid Session";
-            if (data.message === "Invalid Session") {
-                handleLogout();
-            }
+
+        const oldState = loggedOn;
+        loggedOn = data?.message === "Session Valid";
+
+        // only execute the logout once
+        if (oldState && !loggedOn) {
+            await handleLogout();
         }
+
         verifying = false;
     }
-    // runs on page load
+
     onMount(() => {
-        // executes only once on initial load
         Verify();
 
-        // execute on redirect
         afterNavigate(() => {
-            Verify();
+            // Only verify again if the user is logged in
+            if (loggedOn) Verify();
         });
-    })
+    });
 </script>
 
 <!-- these tags are shared between all pages in the site -->

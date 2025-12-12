@@ -7,8 +7,6 @@
     import { onMount } from 'svelte';
     import { afterNavigate } from '$app/navigation';
 
-    import { handleLogout } from '$lib/auth';
-
     let verifying = $state(false);
     async function Verify() {
         // bottle neck number of times this function executes on client-side
@@ -22,7 +20,7 @@
         const data = await response.json();
         if (data) {
             if (!data.is_admin) {
-                handleLogout();
+                window.location.href = "/";
             }
         }
         verifying = false;

@@ -13,5 +13,5 @@ export const handleLogout = async () => {
         credentials: "include"
     });
     await response.json();
-    window.location.href = "/";
+    if (window.location.href !== "/") window.location.href = "/";
 };
