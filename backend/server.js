@@ -2,7 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from "cors";
 
-import { RegisterUser, LoginUser, LogoutUser, VerifySession, IsAdmin } from './db.js';
+import { RegisterUser, LoginUser, LogoutUser, VerifySession, IsAdmin } from './userManage.js';
 
 const app = express();
 const PORT = 4000;
@@ -55,10 +55,11 @@ app.get('/verify_auth', async (req, res) => {
             return res.json({
                 message: (valid) ? "Session Valid" : "Invalid Session"
             });
+        } else {
+            return res.json({
+                message: "No Existing Session"
+            });
         }
-        return res.json({
-            message: "No Existing Session"
-        });
     } catch (err) {
         console.error(err);
         return res.status(500).text("An unexpected error occurred.");
@@ -106,6 +107,7 @@ app.get('/logout', async (req, res) => {
     try {
         const sessid = req.cookies.sessid;
         if (sessid) {
+            console.log("COOKIE found!");
             const loggedOut = await LogoutUser(sessid);
             res.clearCookie("sessid");
             return res.json({
@@ -113,6 +115,7 @@ app.get('/logout', async (req, res) => {
                 success: (loggedOut)
             });
         } else {
+            console.log("No existing COOKIE!");
             return res.json({
                 message: "Failed to Logout",
                 success: false
