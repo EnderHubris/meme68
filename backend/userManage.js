@@ -315,3 +315,41 @@ export async function UserExists(username, email) {
         return true;
     }
 }
+
+/**
+ * Get a list of the current users/enjoyers
+ *
+ * @returns {Promise<Array<{id,username,email,created_at}>>} Returns an array of user data
+**/
+export async function GetEnjoyers() {
+    try {
+        const rows = await query(
+            "SELECT id,username,email,created_at FROM users WHERE admin = 0"
+        );
+        return rows;
+    } catch (err) {
+        console.error(`Error: ${err}`);
+        return [];
+    }
+}
+
+/**
+ * Return array of liked memes based on given SESSID
+ *
+ * @returns {Promise<Array<string>>} Returns string array of meme ids representing liked memes
+**/
+export async function GetLikedMemes(sessid) {
+    try {
+        if (!sessid) return [];
+
+        const data = await query(
+            "SELECT liked_memes FROM users WHERE id = (SELECT uid FROM sessions WHERE sid = ?) LIMIT 1",
+            [sessid]
+        );
+        const liked_memes = data[0]?.liked_memes || [];
+        return liked_memes;
+    } catch (err) {
+        console.error(`Error: ${err}`);
+        return [];
+    }
+}

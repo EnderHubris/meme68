@@ -2,11 +2,25 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from "cors";
 
-import { RegisterUser, LoginUser, LogoutUser, VerifySession, IsAdmin } from './userManage.js';
+import {
+    RegisterUser, LoginUser, LogoutUser, VerifySession,
+    IsAdmin, GetEnjoyers, GetLikedMemes
+} from './userManage.js';
+
 import { CreateAdmin, GetAdmins, RemoveAdmin } from './adminManage.js';
+import {
+    UploadMeme, DeleteMeme, GetMemes, GetRecentMemes,
+    LikedMeme, DislikeMeme
+} from './memeManage.js';
 
 const app = express();
 const PORT = 4000;
+
+import multer from "multer";
+import { fileTypeFromFile } from "file-type";
+import fs from "fs";
+import path from "path";
+export const UPLOAD_DIR = "uploads/";
 
 // try to mitigate from sending response data back to sketchy places
 const allowedOrigins = [
@@ -33,7 +47,7 @@ app.use(cookieParser()); // Access cookies
 // Custom Error Handler to minimize verbose output
 app.use((err, req, res, next) => {
     console.error(err);
-    return res.status(500).text("An unexpected error occurred.");
+    return res.status(500).send("An unexpected error occurred.");
 });
 
 app.get('/', (req, res) => {
@@ -63,7 +77,7 @@ app.get('/verify_auth', async (req, res) => {
         }
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 app.get('/is_admin', async (req, res) => {
@@ -100,7 +114,7 @@ app.get('/is_admin', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 
@@ -124,7 +138,7 @@ app.get('/logout', async (req, res) => {
         }
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 app.post('/login', async (req, res) => {
@@ -156,7 +170,7 @@ app.post('/login', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 app.post('/register', async (req, res) => {
@@ -176,7 +190,7 @@ app.post('/register', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 
@@ -205,7 +219,7 @@ app.get('/admin/fetch', async (req, res) => {
         return res.json({ admins: [] });
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 app.post('/admin/create', async (req, res) => {
@@ -250,7 +264,7 @@ app.post('/admin/create', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 app.post('/admin/remove', async (req, res) => {
@@ -292,7 +306,281 @@ app.post('/admin/remove', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).text("An unexpected error occurred.");
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.get('/admin/get_enjoyers', async (req, res) => {
+    try {
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                const enjoyers = await GetEnjoyers();
+                return res.json({ enjoyers: enjoyers });
+            } else {
+                return res.json({ enjoyers: [] });
+            }
+        }
+        return res.json({ enjoyers: [] });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.get('/get_memes', async (req, res) => {
+    try {
+        const memes = await GetMemes();
+        return res.json({ memes: memes });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+app.get('/get_recent_memes', async (req, res) => {
+    try {
+        const memes = await GetRecentMemes();
+        return res.json({ memes: memes });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+app.get('/get_liked_memes', async (req, res) => {
+    try {
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            if (valid) {
+                const liked_memes = await GetLikedMemes(sessid);
+                console.log(`LIKED_MEMES -> ${JSON.stringify(liked_memes)}`);
+                return res.json({ liked_memes: liked_memes });
+            }
+        }
+        return res.json({ liked_memes: [] });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.post('/admin/remove_meme', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!data)
+            return res.json({message:"Failed to Remove", success: false});
+
+        if (!data.mid)
+            return res.json({message:"Failed to Remove", success: false});
+
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                const removed = await DeleteMeme(data.mid);
+                return res.json({
+                    message: removed ? "Removed Successfully" : "Failed to Remove",
+                    success: removed
+                });
+            } else {
+                return res.json({
+                    message: "Failed to Remove",
+                    success: false
+                });
+            }
+        }
+
+        return res.json({
+            message: "Failed to Remove",
+            success: false
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.post('/like_meme', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!data)
+            return res.json({message:"Need an Account to use this feature", success: false});
+
+        if (!data.mid)
+            return res.json({message:"Need an Account to use this feature", success: false});
+
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            if (valid) {
+                const likeApplied = await LikedMeme(sessid, data.mid);
+                return res.json({
+                    message: likeApplied ? "Meme Liked" : "Error Occurred",
+                    success: likeApplied
+                });
+            }
+        }
+
+        return res.json({
+            message: "Need an Account to use this feature",
+            success: false
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.post('/dislike_meme', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!data)
+            return res.json({message:"Need an Account to use this feature", success: false});
+
+        if (!data.mid)
+            return res.json({message:"Need an Account to use this feature", success: false});
+
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            if (valid) {
+                const dislikeApplied = await DislikeMeme(sessid, data.mid);
+                return res.json({
+                    message: dislikeApplied ? "Meme Disliked" : "Error Occurred",
+                    success: dislikeApplied
+                });
+            }
+        }
+
+        return res.json({
+            message: "Need an Account to use this feature",
+            success: false
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+//####################################################################################
+
+const ALLOWED_TYPES = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg"
+];
+
+const upload = multer({
+    dest: UPLOAD_DIR,
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB
+    },
+    fileFilter(req, file, cb) {
+        if (!ALLOWED_TYPES.includes(file.mimetype)) {
+            return cb(new Error("Invalid file type"), false);
+        }
+        cb(null, true);
+    }
+});
+
+app.post("/upload", upload.array("files", 10), async (req, res) => {
+    try {
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+
+        if (!sessid) {
+            cleanup(req.files);
+            return res.json({ success: false });
+        }
+
+        const valid = await VerifySession(sessid, IP);
+        if (!valid || !(await IsAdmin(sessid, IP))) {
+            cleanup(req.files);
+            return res.json({ success: false });
+        }
+
+        let i = 0;
+        let uploadCount = 0;
+        for (const file of req.files) {
+            const type = await fileTypeFromFile(file.path);
+
+            if (!type || !ALLOWED_TYPES.includes(type.mime)) {
+                fs.unlinkSync(file.path);
+                return res.json({ error: "Invalid file content" });
+            }
+
+            const tags = req.body.tags[i];
+            const uploaded = await UploadMeme(file.filename, tags);
+            if (uploaded) ++uploadCount;
+
+            ++i;
+        }
+
+        return res.json({ uploadCount: uploadCount, success: true });
+    } catch (err) {
+        console.error(err);
+        cleanup(req.files);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+function cleanup(files = []) {
+    for (const file of files) {
+        try {
+            fs.unlinkSync(file.path);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+}
+
+app.get('/uploads/:filename', (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        // Validate filename (no ../, only safe chars)
+        if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
+            return res.status(400).send("Invalid Input");
+        }
+
+        const filePath = path.resolve(UPLOAD_DIR, filename);
+        const uploadsDir = path.resolve(UPLOAD_DIR);
+
+        if (!filePath.startsWith(uploadsDir)) {
+            return res.status(400).send("Invalid Input");
+        }
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).send("File not found");
+        }
+
+        return res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(err.status || 500).send("Error sending file");
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
     }
 });
 

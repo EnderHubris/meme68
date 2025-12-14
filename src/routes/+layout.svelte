@@ -15,6 +15,7 @@
 
 	let { children } = $props();
     let loggedOn = $state(false); // state variables can be used to do conditioned-HTML-rendering
+    let isAdmin = $state(false);
     let verifying = $state(false);
 
     async function Verify() {
@@ -39,8 +40,18 @@
         verifying = false;
     }
 
+    async function CheckAdmin() {
+        const response = await fetch(`http://localhost:4000/is_admin`, {
+            method: "GET",
+            credentials: 'include'  // ensures cookies are sent
+        });
+        const data = await response.json();
+        isAdmin = data && data.is_admin;
+    }
+
     onMount(() => {
         Verify();
+        CheckAdmin();
 
         afterNavigate(() => {
             // Only verify again if the user is logged in
@@ -82,7 +93,9 @@
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="/">Home</a></li>
-            <li><a class="dropdown-item" href="/admin">Admin</a></li>
+            {#if loggedOn && isAdmin}
+              <li><a class="dropdown-item" href="/admin">Admin</a></li>
+            {/if}
             <!-- add more links here -->
           </ul>
         </li>

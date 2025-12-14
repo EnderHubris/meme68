@@ -89,8 +89,8 @@
 
 <h2 class="mb-4 text-center">👤 Current Admins</h2>
 <div class="container" style="max-width: 500px;">
-    <a class="navbar-brand" href="/admin">Back</a>
-</div>
+    <a class="navbar-brand btn btn-outline-secondary" href="/admin">Back</a>
+</div><hr>
 
 <div class="d-flex justify-content-center align-items-center" style="padding: 25px;">
   <form class="p-4 bg-white shadow rounded" style="width: 100%; max-width: 400px;" on:submit={createAdmin}>
@@ -134,7 +134,7 @@
 
     <button type="submit" class="btn btn-primary w-100">Submit</button>
   </form>
-</div>
+</div><hr>
 
 <div class="container my-5 d-flex justify-content-center">
   <div class="card shadow-sm" style="max-width: 1000px; width: 100%;">
