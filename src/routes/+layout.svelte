@@ -56,33 +56,78 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
   <div class="container">
-    <a class="navbar-brand" href="/">Home</a>
-    <a class="nav-link" href="/admin">Admin</a>
+    <a class="navbar-brand" href="/">meme68</a>
 
-    <div class="collapse navbar-collapse">
+    <!-- Mobile toggle -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#mainNavbar"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <!-- LEFT dropdown -->
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+          >
+            Menu
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/">Home</a></li>
+            <li><a class="dropdown-item" href="/admin">Admin</a></li>
+            <!-- add more links here -->
+          </ul>
+        </li>
+      </ul>
+
+      <!-- RIGHT dropdown (auth) -->
       <ul class="navbar-nav ms-auto">
-        {#if !loggedOn}
-            <li class="nav-item">
-                <a class="nav-link" href="/login">Login</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/register">Register</a>
-            </li>
-        {:else}
-            <li class="nav-item">
-                <a href="#" class="nav-link" on:click|preventDefault={handleLogout}>Logout</a>
-            </li>
-        {/if}
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+          >
+            Account
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end">
+            {#if !loggedOn}
+              <li><a class="dropdown-item" href="/login">Login</a></li>
+              <li><a class="dropdown-item" href="/register">Register</a></li>
+            {:else}
+              <li>
+                <a
+                  class="dropdown-item text-danger"
+                  href="#"
+                  on:click|preventDefault={handleLogout}
+                >
+                  Logout
+                </a>
+              </li>
+            {/if}
+          </ul>
+        </li>
       </ul>
     </div>
   </div>
 </nav>
 
+<!-- potentially required by all layout files to render page contents -->
 <main class="container mt-5 pt-5">
     <!-- renders content from +page.svelte -->
     {@render children()}
 </main>
 
 <footer class="container mt-5 pt-5 text-center">
-    meme68 &copy; 2025 Ender
+    meme68 &copy; 2025
 </footer>

@@ -302,10 +302,10 @@ export async function RegisterUser(username, email, password) {
  * @param {string} email - email
  * @returns {Promise<boolean>} Returns if a user exists
 **/
-async function UserExists(username, email) {
+export async function UserExists(username, email) {
     try {
         const rows = await query(
-            "SELECT id FROM users WHERE username = ? AND email = ?",
+            "SELECT id FROM users WHERE username = ? OR email = ?",
             [username, email]
         );
         return rows.length > 0;

@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import cors from "cors";
 
 import { RegisterUser, LoginUser, LogoutUser, VerifySession, IsAdmin } from './userManage.js';
+import { CreateAdmin, GetAdmins, RemoveAdmin } from './adminManage.js';
 
 const app = express();
 const PORT = 4000;
@@ -172,6 +173,122 @@ app.post('/register', async (req, res) => {
         return res.json({
             message: addedUser ? "Registered Successfully" : "Failed to Register",
             success: addedUser
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).text("An unexpected error occurred.");
+    }
+});
+
+app.get('/admin/fetch', async (req, res) => {
+    try {
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                console.log("Fetching Admins. . .");
+                const admins = await GetAdmins();
+                console.log(`Admins -> ${JSON.stringify(admins)}`);
+                
+                return res.json({ admins: admins });
+            } else {
+                return res.json({ admins: [] });
+            }
+        }
+        return res.json({ admins: [] });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).text("An unexpected error occurred.");
+    }
+});
+app.post('/admin/create', async (req, res) => {
+    try {
+        const data = req.body; // JSON {username, email, password}
+        if (!data)
+            return res.json({message:"Failed to Register", success: false});
+
+        if (!data.username || !data.email || !data.password)
+            return res.json({message:"Failed to Register", success: false});
+
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                console.log("New Admin Created!");
+                
+                const created = await CreateAdmin(data.username, data.email, data.password);
+                return res.json({
+                    message: created ? "Created Successfully" : "Failed to Create",
+                    success: created
+                });
+            } else {
+                console.log(`Non-Admin (${req.ip}) tried creating an Admin Account!`);
+                return res.json({
+                    message: "Failed to Create",
+                    success: false
+                });
+            }
+        }
+
+        return res.json({
+            message: "Failed to Create",
+            success: false
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).text("An unexpected error occurred.");
+    }
+});
+app.post('/admin/remove', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!data)
+            return res.json({message:"Failed to Remove", success: false});
+
+        if (!data.username)
+            return res.json({message:"Failed to Remove", success: false});
+
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                const removed = await RemoveAdmin(data.username);
+                return res.json({
+                    message: removed ? "Removed Successfully" : "Failed to Remove",
+                    success: removed
+                });
+            } else {
+                return res.json({
+                    message: "Failed to Remove",
+                    success: false
+                });
+            }
+        }
+
+        return res.json({
+            message: "Failed to Remove",
+            success: false
         });
     } catch (err) {
         console.error(err);

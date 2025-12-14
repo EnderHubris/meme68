@@ -5,7 +5,10 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 */
     import { onMount } from 'svelte';
+    let { children } = $props();
+
     import { afterNavigate } from '$app/navigation';
+    
 
     let verifying = $state(false);
     async function Verify() {
@@ -37,3 +40,6 @@
         });
     })
 </script>
+
+<!-- renders content from +page.svelte -->
+{@render children()}
