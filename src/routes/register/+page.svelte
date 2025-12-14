@@ -26,7 +26,7 @@
         console.log(data);
 
         if (data && data.success) {
-            window.location.href = '/account/login';
+            window.location.href = '/login';
         }
     };
 </script>
