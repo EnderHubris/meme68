@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
-    import { LikeMeme, DisikeMeme } from '$lib/interact';
+    import { LikeMeme, DisikeMeme, ShareMeme } from '$lib/interact';
     import { FetchMemes, FetchLikedMemes } from '$lib/collect';
 
     const ViewMore = (event: Event, mid: string) => {
@@ -175,7 +175,23 @@
       {#each filteredMemes as meme}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
           <div class="card h-100 p-3 shadow-sm d-flex flex-column">
-            <strong class="mb-1">Likes: {meme.likes}</strong>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <strong class="mb-0">Likes: {meme.likes}</strong>
+
+                <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" on:click={(event) => ShareMeme(event, meme.mid)}>
+                    <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    class="bi bi-share"
+                    viewBox="0 0 16 16"
+                    >
+                    <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+                    </svg>
+                    Share
+                </button>
+            </div>
 
             <img
               src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}

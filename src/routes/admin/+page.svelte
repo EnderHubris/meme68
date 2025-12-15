@@ -165,6 +165,12 @@
                   <div class="card p-3 h-100">
                     <strong>Likes: {meme.likes}</strong>
                     <div class="text-muted small mb-2">{meme.tagString}</div>
+                    <img
+                        src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
+                        alt="meme image"
+                        class="meme-img img-fluid rounded border mb-2"
+                        on:click={(event) => ViewMore(event, meme.mid)}
+                    />
                   </div>
                 </div>
               {/each}
