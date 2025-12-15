@@ -38,9 +38,63 @@
         loading: boolean
     } = { liked_memes: [], error: "", loading: false };
 
+    let filterTags: string[] = [];
+    let tagInput = "";
+    let createdAfter = "";   // yyyy-mm-dd format
+    let createdBefore = "";
+
+    async function handleTagKey(e: KeyboardEvent) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const tag = tagInput.trim().toLowerCase();
+
+            // creates array of strings from a comma-separated string
+            if (tag && !filterTags.includes(tag)) {
+                filterTags = [...filterTags, tag];
+            }
+
+            tagInput = "";
+            console.log(filterTags);
+            await populate();
+            filterTags = [];
+        }
+    }
+
+    function removeTag(tag: string) {
+        filterTags = filterTags.filter(t => t !== tag);
+    }
+
+    let filteredMemes = $state([{mid:"", tagString: "", likes: 0}]);
+
     async function populate() {
         try {
             memeData = await FetchMemes();
+            filteredMemes = memeData.memes.filter(meme => {
+                // TAG FILTER
+                if (filterTags.length > 0) {
+                    const memeTags = meme.tagString
+                    ?.split(',')
+                    .map((t: string) => t.trim().toLowerCase());
+
+                    if (!filterTags.every(tag => memeTags.includes(tag))) {
+                    return false;
+                    }
+                }
+
+                // DATE FILTER
+                const created = new Date(meme.created_at);
+
+                if (createdAfter && created < new Date(createdAfter)) {
+                    return false;
+                }
+
+                if (createdBefore && created > new Date(createdBefore)) {
+                    return false;
+                }
+
+                return true;
+            });
+
             likedMemeData = await FetchLikedMemes();
         } catch {}
     }
@@ -68,6 +122,48 @@
 
 <h1 class="text-center">Meme Gallery</h1><hr>
 
+<!-- meme searching / filtering -->
+<div class="card p-3 mb-4 shadow-sm">
+  <div class="d-flex flex-wrap gap-3 align-items-end">
+
+    <!-- tag filtering -->
+    <div class="flex-grow-1">
+      <label class="form-label small mb-1">Tags (separate multiple tags with a comma)</label>
+      <div class="form-control d-flex flex-wrap gap-2 p-2">
+        {#each filterTags as tag}
+          <span class="badge bg-primary">
+            {tag}
+            <button
+              type="button"
+              class="btn-close btn-close-white ms-2"
+              on:click={() => removeTag(tag)}
+            />
+          </span>
+        {/each}
+
+        <input
+          class="border-0 flex-grow-1"
+          placeholder="Add tag"
+          bind:value={tagInput}
+          on:keydown={handleTagKey}
+        >
+      </div>
+    </div>
+
+    <!-- date filtering -->
+    <div>
+      <label class="form-label small mb-1">After</label>
+      <input type="date" class="form-control form-control-sm" on:change={populate} bind:value={createdAfter}>
+    </div>
+
+    <div>
+      <label class="form-label small mb-1">Before</label>
+      <input type="date" class="form-control form-control-sm" on:change={populate} bind:value={createdBefore}>
+    </div>
+
+  </div>
+</div>
+
 <!-- cards will dynamically generate here -->
 <div class="container my-4">
   {#if memeData.loading}
@@ -76,28 +172,36 @@
     <p class="text-muted">{memeData.error}</p>
   {:else}
     <div class="row g-3">
-      {#each memeData.memes as meme}
+      {#each filteredMemes as meme}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-          <div class="card h-100 p-3 shadow-sm">
-            <strong style="padding: 5px">Likes: {meme.likes}</strong>
+          <div class="card h-100 p-3 shadow-sm d-flex flex-column">
+            <strong class="mb-1">Likes: {meme.likes}</strong>
+
             <img
-                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
-                alt="meme image"
-                class="meme-img img-fluid rounded border mb-2"
-                on:click={(event) => ViewMore(event, meme.mid)}
+              src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
+              alt="meme image"
+              class="meme-img img-fluid rounded border mb-2"
+              on:click={(event) => ViewMore(event, meme.mid)}
             />
 
-            {#if !likedMemeData.liked_memes.includes(meme.mid)}
-                <button class="btn btn-primary w-100"
-                on:click={(event) => PressedLike(event, meme.mid)}>
-                Like
+            <!-- Push button to bottom -->
+            <div class="mt-auto">
+              {#if !likedMemeData.liked_memes.includes(meme.mid)}
+                <button
+                  class="btn btn-primary btn-sm w-100"
+                  on:click={(event) => PressedLike(event, meme.mid)}
+                >
+                  Like
                 </button>
-            {:else}
-                <button class="btn btn-danger w-100"
-                on:click={(event) => PressedDislike(event, meme.mid)}>
-                Dislike
+              {:else}
+                <button
+                  class="btn btn-danger btn-sm w-100"
+                  on:click={(event) => PressedDislike(event, meme.mid)}
+                >
+                  Dislike
                 </button>
-            {/if}
+              {/if}
+            </div>
           </div>
         </div>
       {/each}
