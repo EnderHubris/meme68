@@ -8,7 +8,7 @@
  * @returns {Promise<void>} Completes when logout is finished
 **/
 export const handleLogout = async () => {
-    const response = await fetch("http://localhost:4000/logout", {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/logout`, {
         method: "GET",
         credentials: "include"
     });

@@ -8,7 +8,7 @@
     const handleRegister = async (event: Event) => {
         event.preventDefault();
 
-        const response = await fetch(`http://localhost:4000/register`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -22,8 +22,6 @@
         });
 
         const data = await response.json();
-        
-        console.log(data);
 
         if (data && data.success) {
             window.location.href = '/login';

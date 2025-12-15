@@ -4,13 +4,13 @@ import cors from "cors";
 
 import {
     RegisterUser, LoginUser, LogoutUser, VerifySession,
-    IsAdmin, GetEnjoyers, GetLikedMemes
+    IsAdmin, GetEnjoyers, GetLikedMemes, GetUsername
 } from './userManage.js';
 
 import { CreateAdmin, GetAdmins, RemoveAdmin } from './adminManage.js';
 import {
     UploadMeme, DeleteMeme, GetMemes, GetRecentMemes,
-    LikedMeme, DislikeMeme
+    LikedMeme, DislikeMeme, GetMemeInfo
 } from './memeManage.js';
 
 const app = express();
@@ -474,6 +474,46 @@ app.post('/dislike_meme', async (req, res) => {
             message: "Need an Account to use this feature",
             success: false
         });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.post('/get_meme_info', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!data)
+            return res.json({message:"Bad Data", success: false});
+
+        if (!data.mid)
+            return res.json({message:"Missing meme id parameter", success: false});
+
+        const memeData = await GetMemeInfo(data.mid);
+
+        return res.json({
+            mid: memeData.mid,
+            tagString: memeData.tagString,
+            likes: memeData.likes,
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.get('/say_my_name', async (req, res) => {
+    try {
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            if (valid) {
+                const username = await GetUsername(sessid);
+                return res.json({ username: username });
+            }
+        }
+        return res.json({ username: "Account" });
     } catch (err) {
         console.error(err);
         return res.status(500).send("An unexpected error occurred.");

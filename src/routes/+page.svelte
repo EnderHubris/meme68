@@ -1,116 +1,30 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
-    const GetMemes = async () => {
-        const response = await fetch("http://localhost:4000/get_memes", {
-            credentials: "include"
-        });
+    import { LikeMeme, DisikeMeme } from '$lib/interact';
+    import { FetchMemes, FetchLikedMemes } from '$lib/collect';
 
-        if (!response.ok) {
-            throw new Error("Failed to fetch Memes");
-        }
+    const ViewMore = (event: Event, mid: string) => {
+        window.location.href = "/meme/" + mid
+    }
 
-        return response.json();
-    };
-
-    const GetLikedMemes = async () => {
-        const response = await fetch("http://localhost:4000/get_liked_memes", {
-            credentials: "include"
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch Memes");
-        }
-
-        return response.json();
-    };
-
-    const LikeMeme = async (event: Event, mid: string) => {
+    const PressedLike = async (event: Event, mid: string) => {
         event.preventDefault();
 
-        const response = await fetch("http://localhost:4000/like_meme", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ mid: mid })
-        });
+        await LikeMeme(event, mid);
 
         // refresh list
         await populate();
     };
 
-    const DisikeMeme = async (event: Event, mid: string) => {
+    const PressedDislike = async (event: Event, mid: string) => {
         event.preventDefault();
 
-        const response = await fetch("http://localhost:4000/dislike_meme", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ mid: mid })
-        });
+        await DisikeMeme(event, mid);
 
         // refresh list
         await populate();
     };
-    
-    async function FetchLikedMemes() {
-        let error = "";
-        let loading = false;
-        let likedMemes: any[] = [];
-        
-        try {
-            loading = true;
-            error = "";
-            
-            const data = await GetLikedMemes();
-            console.log(`Liked Memes -> ${JSON.stringify(data)}`);
-            likedMemes = Array.isArray(data) ? data : data.liked_memes ?? [];
-
-            if (likedMemes.length === 0) {
-                error = "You have no liked memes";
-            }
-        } catch (e) {
-            console.error(e);
-            error = "Failed to load liked Memes";
-        } finally {
-            loading = false;
-        }
-
-        return {
-            liked_memes: likedMemes,
-            error: error,
-            loading: loading
-        }
-    }
-    async function FetchMemes() {
-        let error = "";
-        let loading = false;
-        let memes: any[] = [];
-
-        try {
-            loading = true;
-            error = "";
-            
-            const data = await GetMemes();
-            console.log(`Memes -> ${JSON.stringify(data)}`);
-            memes = Array.isArray(data) ? data : data.memes ?? [];
-
-            if (memes.length === 0) {
-                error = "No Memes Exist";
-            }
-        } catch (e) {
-            console.error(e);
-            error = "Failed to load Memes";
-        } finally {
-            loading = false;
-        }
-
-        return {
-            memes: memes,
-            error: error,
-            loading: loading
-        }
-    }
 
     let memeData: {
         memes: any[],
@@ -134,6 +48,24 @@
     onMount(populate);
 </script>
 
+<style>
+/*
+    Desktop/Laptop Browsers have an on:hover effect
+    when hovering over meme images to show they can be clicked
+*/
+@media (hover: hover) and (pointer: fine) {
+    .meme-img {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .meme-img:hover {
+        transform: scale(1.04);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+    }
+}
+</style>
+
 <h1 class="text-center">Meme Gallery</h1><hr>
 
 <!-- cards will dynamically generate here -->
@@ -147,22 +79,22 @@
       {#each memeData.memes as meme}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3">
           <div class="card h-100 p-3 shadow-sm">
-            <strong>Likes: {meme.likes}</strong>
-            <div class="text-muted small mb-2">{meme.tagString}</div>
+            <strong style="padding: 5px">Likes: {meme.likes}</strong>
             <img
-              src="http://localhost:4000/uploads/{meme.mid}"
-              alt="meme image"
-              class="img-fluid rounded shadow border mb-2"
-            >
+                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
+                alt="meme image"
+                class="meme-img img-fluid rounded border mb-2"
+                on:click={(event) => ViewMore(event, meme.mid)}
+            />
 
             {#if !likedMemeData.liked_memes.includes(meme.mid)}
                 <button class="btn btn-primary w-100"
-                on:click={(event) => LikeMeme(event, meme.mid)}>
+                on:click={(event) => PressedLike(event, meme.mid)}>
                 Like
                 </button>
             {:else}
                 <button class="btn btn-danger w-100"
-                on:click={(event) => DisikeMeme(event, meme.mid)}>
+                on:click={(event) => PressedDislike(event, meme.mid)}>
                 Dislike
                 </button>
             {/if}

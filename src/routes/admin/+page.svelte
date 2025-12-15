@@ -13,7 +13,7 @@
         let loading = false;
 
         const GetUsers = async () => {
-            const response = await fetch("http://localhost:4000/admin/get_enjoyers", {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/admin/get_enjoyers`, {
                 credentials: "include"
             });
 
@@ -34,8 +34,7 @@
             if (users.length === 0) {
                 error = "No Users Exist";
             }
-        } catch (e) {
-            console.error(e);
+        } catch {
             error = "Failed to load users";
         } finally {
             loading = false;
@@ -60,7 +59,7 @@
         let loading = false;
     
         const GetRecentMemes = async () => {
-            const response = await fetch("http://localhost:4000/get_recent_memes", {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/get_recent_memes`, {
                 credentials: "include"
             });
     
@@ -81,8 +80,7 @@
             if (memes.length === 0) {
                 error = "No Memes Exist";
             }
-        } catch (e) {
-            console.error(e);
+        } catch {
             error = "Failed to load memes";
         } finally {
             loading = false;

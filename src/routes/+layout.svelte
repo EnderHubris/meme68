@@ -17,12 +17,13 @@
     let loggedOn = $state(false); // state variables can be used to do conditioned-HTML-rendering
     let isAdmin = $state(false);
     let verifying = $state(false);
+    let displayName = $state("Account");
 
     async function Verify() {
         if (verifying) return;
         verifying = true;
 
-        const response = await fetch("http://localhost:4000/verify_auth", {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/verify_auth`, {
             method: "GET",
             credentials: "include"
         });
@@ -41,7 +42,7 @@
     }
 
     async function CheckAdmin() {
-        const response = await fetch(`http://localhost:4000/is_admin`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/is_admin`, {
             method: "GET",
             credentials: 'include'  // ensures cookies are sent
         });
@@ -49,9 +50,19 @@
         isAdmin = data && data.is_admin;
     }
 
+    async function FindUsername() {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/say_my_name`, {
+            method: "GET",
+            credentials: 'include'  // ensures cookies are sent
+        });
+        const data = await response.json();
+        displayName = data.username || "Account";
+    }
+
     onMount(() => {
         Verify();
         CheckAdmin();
+        FindUsername();
 
         afterNavigate(() => {
             // Only verify again if the user is logged in
@@ -110,7 +121,7 @@
             role="button"
             data-bs-toggle="dropdown"
           >
-            Account
+            {displayName}
           </a>
 
           <ul class="dropdown-menu dropdown-menu-end">

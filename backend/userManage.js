@@ -353,3 +353,23 @@ export async function GetLikedMemes(sessid) {
         return [];
     }
 }
+
+/**
+ * Get username from session
+ *
+ * @returns {Promise<string>} Returns username
+**/
+export async function GetUsername(sessid) {
+    try {
+        if (!sessid) return [];
+
+        const data = await query(
+            "SELECT username FROM users WHERE id = (SELECT uid FROM sessions WHERE sid = ?) LIMIT 1",
+            [sessid]
+        );
+        return data[0]?.username || "Account";
+    } catch (err) {
+        console.error(`Error: ${err}`);
+        return [];
+    }
+}

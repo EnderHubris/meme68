@@ -1,4 +1,7 @@
 <script lang="ts">
+    /**
+     * Admin File Management Logic
+    */
     type FileWithTags = {
         file: File;
         tags: string[];
@@ -53,14 +56,13 @@
         });
 
         try {
-            const res = await fetch("http://localhost:4000/upload", {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/upload`, {
                 method: "POST",
                 credentials: "include",
                 body: formData
             });
 
             const data = await res.json();
-            console.log("Upload response:", data);
 
             if (data.success) {
                 alert("Upload complete!");
@@ -74,29 +76,22 @@
         }
     }
 
+
+    /**
+     * Admin Panel Logic
+    */
     import { onMount } from 'svelte';
+    import { GetMemes } from '$lib/collect';
 
     let memes: any[] = [];
     let error = "";
     let loading = false;
 
-    const GetMemes = async () => {
-        const response = await fetch("http://localhost:4000/get_memes", {
-            credentials: "include"
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to fetch Memes");
-        }
-
-        return response.json();
-    };
-
     const removeMeme = async (event: Event, mid: string) => {
         event.preventDefault();
 
         if (window.confirm("Are you sure?")) {
-            const response = await fetch("http://localhost:4000/admin/remove_meme", {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/admin/remove_meme`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -114,14 +109,12 @@
             error = "";
             
             const data = await GetMemes();
-            console.log(`Memes -> ${JSON.stringify(data)}`);
             memes = Array.isArray(data) ? data : data.memes ?? [];
 
             if (memes.length === 0) {
                 error = "No Memes Exist";
             }
-        } catch (e) {
-            console.error(e);
+        } catch {
             error = "Failed to load Memes";
         } finally {
             loading = false;
@@ -171,7 +164,7 @@
                 type="button"
                 class="btn-close btn-close-white ms-2"
                 on:click={() => removeTag(i, tag)}
-              />
+              ></button>
             </span>
           {/each}
 
@@ -211,7 +204,7 @@
             <strong>Likes: {meme.likes}</strong>
             <div class="text-muted small mb-2">{meme.tagString}</div>
             <img
-              src="http://localhost:4000/uploads/{meme.mid}"
+              src="{import.meta.env.VITE_BACKEND_ROOT}/uploads/{meme.mid}"
               alt="meme image"
               class="img-fluid rounded shadow border mb-2"
             >

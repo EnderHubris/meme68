@@ -16,7 +16,7 @@
         if (verifying) return;
         verifying = true;
 
-        const response = await fetch(`http://localhost:4000/is_admin`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/is_admin`, {
             method: "GET",
             credentials: 'include'  // ensures cookies are sent
         });

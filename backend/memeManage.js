@@ -4,6 +4,38 @@ import { query } from './db.js';
 import { UPLOAD_DIR } from './server.js';
 
 /**
+ * Simple meme data fetching function
+ * 
+ * @param {string} mid - meme id
+ * @returns {Promise<{mid:string, tagString:string, likes:number}>} Returns JSON blob containing meme information
+**/
+export async function GetMemeInfo(mid) {
+    try {
+        const row = await query(
+            "SELECT mid, tagString, likes FROM memes WHERE mid = ? LIMIT 1",
+            [mid]
+        );
+        
+        return {
+            mid: mid,
+            tagString: row[0].tagString,
+            likes: row[0].likes
+        } || {
+            mid: mid,
+            tagString: "",
+            likes: 0
+        }
+    } catch (err) {
+        console.error(err);
+        return {
+            mid: mid,
+            tagString: "",
+            likes: 0
+        }
+    }
+}
+
+/**
  * Upload meme information to the Database
  * 
  * @param {any} file - meme image file

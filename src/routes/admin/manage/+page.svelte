@@ -10,7 +10,7 @@
     let loading = false;
 
     const GetAdmins = async () => {
-        const response = await fetch("http://localhost:4000/admin/fetch", {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/admin/fetch`, {
             credentials: "include"
         });
 
@@ -29,13 +29,10 @@
             const data = await GetAdmins();
             admins = Array.isArray(data) ? data : data.admins ?? [];
 
-            console.log(admins);
-
             if (admins.length === 0) {
                 error = "No Admins Exist";
             }
-        } catch (e) {
-            console.error(e);
+        } catch {
             error = "Failed to load admins";
         } finally {
             loading = false;
@@ -46,7 +43,7 @@
         event.preventDefault();
 
         if (window.confirm("Are you sure?")) {
-            const response = await fetch("http://localhost:4000/admin/remove", {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/admin/remove`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -62,7 +59,7 @@
         event.preventDefault();
 
         if (window.confirm("Do you trust this person?")) {
-            const response = await fetch("http://localhost:4000/admin/create", {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/admin/create`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
