@@ -63,38 +63,51 @@
     let filteredMemes = $state([{mid:"", tagString: "", likes: 0}]);
 
     let showLikedOnly = false;
-
+    let showPopular = false;
+    
+    let populating = false;
     async function populate() {
+        if (populating) return;
+        populating = true;
+
         try {
             memeData = await FetchMemes();
             likedMemeData = await FetchLikedMemes();
 
             filteredMemes = memeData.memes.filter(meme => {
-                if (showLikedOnly) {
-                    return likedMemeData.liked_memes.includes(meme.mid);
-                }
-
-                // TAG FILTER
-                if (filterTags.length > 0) {
-                    const memeTags = meme.tagString
-                        ?.split(',')
-                        .map(t => t.trim().toLowerCase());
-
-                    if (!filterTags.every(tag => memeTags?.includes(tag))) {
-                        return false;
+                if (!showPopular) {
+                    if (showLikedOnly) {
+                        return likedMemeData.liked_memes.includes(meme.mid);
                     }
+    
+                    // TAG FILTER
+                    if (filterTags.length > 0) {
+                        const memeTags = meme.tagString
+                            ?.split(',')
+                            .map(t => t.trim().toLowerCase());
+    
+                        if (!filterTags.every(tag => memeTags?.includes(tag))) {
+                            return false;
+                        }
+                    }
+    
+                    // DATE FILTER
+                    const created = new Date(meme.created_at);
+                    if (createdAfter && created < new Date(createdAfter)) return false;
+                    if (createdBefore && created > new Date(createdBefore)) return false;
                 }
-
-                // DATE FILTER
-                const created = new Date(meme.created_at);
-                if (createdAfter && created < new Date(createdAfter)) return false;
-                if (createdBefore && created > new Date(createdBefore)) return false;
-
                 return true;
             });
+
+            if (showPopular) {
+                // sort by likes in descending order
+                filteredMemes.sort((a, b) => b.likes - a.likes);
+            }
         } catch (err) {
             console.error(err);
         }
+
+        populating = false;
     }
 
     onMount(populate);
@@ -168,16 +181,40 @@
             </div>
         </div>
 
-      <!-- Liked-only toggle -->
+      <!-- Toggles -->
         <div class="form-check form-switch d-flex align-items-center mt-2">
             <input
                 class="form-check-input"
                 type="checkbox"
                 id="likedToggle"
                 bind:checked={showLikedOnly}
-                on:change={populate}
+                on:change={() => {
+                    populate();
+
+                    if (showPopular) {
+                        const showPopularToggle = document.getElementById('popularToggle');
+                        if (showPopularToggle) showPopularToggle.checked = false;
+                    }
+                }}
             >
             <label class="form-check-label ms-2" for="likedToggle">Show Liked Only</label>
+        </div>
+        <div class="form-check form-switch d-flex align-items-center mt-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                id="popularToggle"
+                bind:checked={showPopular}
+                on:change={() => {
+                    populate();
+
+                    if (showLikedOnly) {
+                        const showLikedToggle = document.getElementById('likedToggle');
+                        if (showLikedToggle) showLikedToggle.checked = false;
+                    }
+                }}
+            >
+            <label class="form-check-label ms-2" for="likedToggle">Show Popular</label>
         </div>
     </div>
 
