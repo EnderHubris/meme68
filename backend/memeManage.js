@@ -105,6 +105,70 @@ export async function DeleteMeme(fileName) {
 }
 
 /**
+ * Edit meme from the Database
+ * 
+ * @param {string} mid - meme id
+ * @param {string} newTagString - comma-separated tag list string
+ * @returns {Promise<boolean>} Returns if Meme edit was successful
+**/
+export async function EditMeme(mid, newTagString) {
+    try {
+        if (!mid || !newTagString) {
+            return false;
+        }
+
+        // try to clean-up the tagString (remove bad formatting)
+        if (newTagString.length > 0) {
+            const tagList = newTagString
+                ?.split(',')
+                .map(t => t.trim().toLowerCase());
+
+            console.log(`tag list -> ${JSON.stringify(tagList)}`)
+
+            let cleanedTagString = "";
+            for (let i = 0; i < tagList.length; ++i) {
+
+                // remove weird characters from tags
+                const tag = tagList[i]
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '_')       // replace space for underscore
+                    .replace(/-/g, '_')         // replace hyphen for underscore
+                    .replace(/[^a-z0-9_]/g, '') // only allow alphanum and underscore (no unicode or other weird chars)
+                    .replace(/_+/g, '_')        // merge multiple underscores into a single underscore
+                    .replace(/^_+|_+$/g, '');   // remove pre-hang and post-hang underscores
+
+                // only write non-empty strings
+                if (tag.length > 0) {
+                    cleanedTagString += tag;
+                    if (i < tagList.length - 1) {
+                        cleanedTagString += ",";
+                    }
+                }
+            }
+            newTagString = cleanedTagString;
+            console.log(`new tag string list -> ${newTagString}`)
+        }
+
+        const result = await query(
+            "UPDATE memes SET tagString = ? WHERE mid = ?",
+            [newTagString, mid]
+        );
+
+        if (result && result.affectedRows === 1) {
+            console.log("Meme TagString Updated")
+        } else {
+            console.log("Failed to Update Meme TagString")
+        }
+
+        return result && result.affectedRows === 1;
+    } catch (err) {
+        console.error(`Error: ${err}`);
+        return false;
+    }
+}
+
+/**
  * Fetch current memes within the database
  * 
  * @returns {Promise<Array<any>>} Returns array of memes in the DB

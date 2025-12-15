@@ -10,7 +10,7 @@ import {
 import { CreateAdmin, GetAdmins, RemoveAdmin } from './adminManage.js';
 import {
     UploadMeme, DeleteMeme, GetMemes, GetRecentMemes,
-    LikedMeme, DislikeMeme, GetMemeInfo
+    LikedMeme, DislikeMeme, GetMemeInfo, EditMeme
 } from './memeManage.js';
 
 const app = express();
@@ -408,6 +408,50 @@ app.post('/admin/remove_meme', async (req, res) => {
 
         return res.json({
             message: "Failed to Remove",
+            success: false
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
+app.post('/admin/edit_meme', async (req, res) => {
+    try {
+        const data = req.body;
+        if (!data)
+            return res.json({message:"Failed to Edit", success: false});
+        if (!data.mid)
+            return res.json({message:"Failed to Edit", success: false});
+        if (!data.newTagString)
+            return res.json({message:"Failed to Edit", success: false});
+
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                const editted = await EditMeme(data.mid, data.newTagString);
+                return res.json({
+                    message: editted ? "Editted Successfully" : "Failed to Edit",
+                    success: editted
+                });
+            } else {
+                return res.json({
+                    message: "Failed to Edit",
+                    success: false
+                });
+            }
+        }
+
+        return res.json({
+            message: "Failed to Edit",
             success: false
         });
     } catch (err) {

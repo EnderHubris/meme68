@@ -1,12 +1,8 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
-    import { LikeMeme, DisikeMeme, ShareMeme } from '$lib/interact';
+    import { LikeMeme, DisikeMeme, ShareMeme, ViewMore } from '$lib/interact';
     import { FetchMemes, FetchLikedMemes } from '$lib/collect';
-
-    const ViewMore = (event: Event, mid: string) => {
-        window.location.href = "/meme/" + mid
-    }
 
     const PressedLike = async (event: Event, mid: string) => {
         event.preventDefault();
@@ -103,24 +99,6 @@
 
     onMount(populate);
 </script>
-
-<style>
-/*
-    Desktop/Laptop Browsers have an on:hover effect
-    when hovering over meme images to show they can be clicked
-*/
-@media (hover: hover) and (pointer: fine) {
-    .meme-img {
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .meme-img:hover {
-        transform: scale(1.04);
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
-    }
-}
-</style>
 
 <h1 class="text-center">Meme Gallery</h1><hr>
 

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { ViewMore } from '$lib/interact';
 
     let userData: {
         users: any[],
@@ -164,7 +165,6 @@
                 <div class="col-12 col-sm-6 col-lg-6">
                   <div class="card p-3 h-100">
                     <strong>Likes: {meme.likes}</strong>
-                    <div class="text-muted small mb-2">{meme.tagString}</div>
                     <img
                         src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
                         alt="meme image"

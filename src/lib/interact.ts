@@ -56,3 +56,7 @@ export const ShareMeme = async (event: Event, mid: string) => {
         alert("Cannot share this link. Copy manually: " + memeUrl);
     }
 };
+
+export const ViewMore = (event: Event, mid: string) => {
+    window.location.href = "/meme/" + mid
+}
