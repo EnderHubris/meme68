@@ -10,7 +10,8 @@ import {
 import { CreateAdmin, GetAdmins, RemoveAdmin } from './adminManage.js';
 import {
     UploadMeme, DeleteMeme, GetMemes, GetRecentMemes,
-    LikedMeme, DislikeMeme, GetMemeInfo, EditMeme
+    LikedMeme, DislikeMeme, GetMemeInfo, EditMeme,
+    GetMemeOfTheDay, UpdateMemeOfTheDay
 } from './memeManage.js';
 
 const app = express();
@@ -564,6 +565,27 @@ app.get('/say_my_name', async (req, res) => {
     }
 });
 
+app.get('/meme_of_the_day', async (req, res) => {
+    try {
+        const data = await GetMemeOfTheDay();
+
+        console.log(`[*] MEME OF THE DAY -> ${JSON.stringify({
+            mid: data.mid,
+            tagString: data.tagString,
+            likes: data.likes
+        })}`)
+
+        return res.json({
+            mid: data.mid,
+            tagString: data.tagString,
+            likes: data.likes
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
 //####################################################################################
 
 const ALLOWED_TYPES = [
@@ -671,3 +693,20 @@ app.get('/uploads/:filename', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Backend listening at http://localhost:${PORT}`);
 });
+
+// Period execution to update Meme of the Day
+let checking = false;
+async function UpdateDB() {
+    if (checking) return;
+    checking = true;
+    
+    await UpdateMemeOfTheDay();
+
+    checking = false;
+}
+
+// initial update on start-up
+await UpdateDB();
+
+// Run every 60 seconds (60000 ms)
+setInterval(UpdateDB, 60 * 1000);

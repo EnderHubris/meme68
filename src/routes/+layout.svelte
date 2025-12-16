@@ -104,6 +104,7 @@
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="/">Home</a></li>
+            <li><a class="dropdown-item" href="/events">Events</a></li>
             {#if loggedOn && isAdmin}
               <li><a class="dropdown-item" href="/admin">Admin</a></li>
             {/if}

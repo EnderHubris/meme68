@@ -2,6 +2,7 @@ import fs from "fs";
 
 import { query } from './db.js';
 import { UPLOAD_DIR } from './server.js';
+import { randomInt } from "crypto";
 
 /**
  * Simple meme data fetching function
@@ -320,5 +321,84 @@ export async function DislikeMeme(sessid, mid) {
     } catch (err) {
         console.error(`Error: ${err}`);
         return false;
+    }
+}
+
+export async function UpdateMemeOfTheDay() {
+    const updateEntry = async () => {
+        // get all meme entries
+        const rows = await query("SELECT mid FROM memes")
+        if (rows) {
+            // get mid from random row index
+            const rmid = rows[randomInt(123456789) % rows.length]?.mid || -1;
+            if (rmid !== -1) {
+                // update row entry in DB
+                const updated = await query(
+                    `
+                    INSERT INTO meme_of_the_day (id, mid)
+                    VALUES (1, ?)
+                    ON DUPLICATE KEY UPDATE mid = VALUES(mid), selected_at = CURRENT_TIMESTAMP;
+                    `,
+                    [rmid]
+                )
+            }
+        }
+        console.log("[+] MEME OF THE DAY UPDATED!");
+    }
+
+    // find meme of the day within the DB
+    let row = await query(
+        "SELECT mid, selected_at FROM meme_of_the_day LIMIT 1"
+    );
+
+    // initial placement
+    if (row && row.length === 0) {
+        await updateEntry();
+
+        // update row data
+        row = await query(
+            "SELECT mid, selected_at FROM meme_of_the_day LIMIT 1"
+        );
+    }
+
+    const data = (row && row[0]) ? row[0] : null;
+    if (data) {
+        // if its been 24 hours or more: update row entry
+        const now = new Date();
+        const selected = new Date(data.selected_at);
+
+        const diffMs = now.getTime() - selected.getTime();  // difference in milliseconds
+        const diffHours = diffMs / (1000 * 60 * 60);        // convert to hours
+
+        if (diffHours >= 24) {
+            await updateEntry();
+        }
+    }
+}
+
+export async function GetMemeOfTheDay() {
+    const FetchData = async () => {
+        const memeRows = await query(
+            "SELECT mid, tagString, likes FROM memes WHERE mid = (SELECT mid FROM meme_of_the_day LIMIT 1) LIMIT 1"
+        )
+
+        const memeData = (memeRows && memeRows[0]) ? {
+            mid: memeRows[0].mid,
+            tagString: memeRows[0].tagString,
+            likes: memeRows[0].likes
+        } : { mid: "", tagString: "", likes: 0 };
+
+        return memeData;
+    }
+
+    try {
+        return await FetchData();
+    } catch (err) {
+        console.error(`Error: ${err}`);
+        return {
+            mid: "",
+            tagString: "",
+            likes: 0
+        };
     }
 }
