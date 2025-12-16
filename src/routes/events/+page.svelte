@@ -65,36 +65,37 @@
     onMount(populate);
 </script>
 
-<h1 class="text-center">Meme Of The Day!</h1>
+<h1 class="text-center">Meme Of The Day!</h1><hr>
 
 <div class="container my-5">
-  <div class="row g-4 justify-content-center">
-    <!-- Hero Card -->
+  <div class="row justify-content-center">
     <div class="col-12 col-md-6">
-      <div class="card shadow-sm h-100">
+      <div class="card shadow-sm">
         <div class="card-body text-center">
-          <div class="row g-3">
-            {#if memeData.loading}
-              <p class="text-muted">Loading meme...</p>
-            {:else if memeData.error}
-              <p class="text-muted">{memeData.error}</p>
-            {:else}
-                <div class="col-12 col-sm-6 col-lg-6">
-                    <div class="card p-3 h-100">
-                        <strong>Likes: {memeData.meme.likes}</strong>
 
-                        <img
-                            src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeData.meme.mid}`}
-                            alt="meme image"
-                            class="meme-img img-fluid rounded border mb-2"
-                            on:click={(event) => ViewMore(event, memeData.meme.mid)}
-                        />
+          {#if memeData.loading}
+            <p class="text-muted mb-0">Loading meme...</p>
 
-                        <span class="text-muted">{memeData.meme.tagString}</span>
-                    </div>
-                </div>
-            {/if}
-          </div>
+          {:else if memeData.error}
+            <p class="text-muted mb-0">{memeData.error}</p>
+
+          {:else}
+            <strong class="d-block mb-2">
+              Likes: {memeData.meme.likes}
+            </strong>
+
+            <img
+              src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeData.meme.mid}`}
+              alt="meme image"
+              class="meme-img img-fluid rounded border mb-3"
+              on:click={(event) => ViewMore(event, memeData.meme.mid)}
+            />
+
+            <div class="text-muted small">
+              {memeData.meme.tagString}
+            </div>
+          {/if}
+
         </div>
       </div>
     </div>
