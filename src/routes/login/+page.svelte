@@ -34,7 +34,7 @@
 </script>
 
 <div class="d-flex justify-content-center align-items-center">
-  <form class="p-4 bg-white shadow rounded" style="width: 100%; max-width: 400px;" on:submit={handleLogin}>
+  <form id="dataForm" class="p-4 shadow rounded" style="width: 100%; max-width: 400px;" on:submit={handleLogin}>
     <h2 class="mb-4 text-center">Login</h2>
 
     <div class="mb-3">

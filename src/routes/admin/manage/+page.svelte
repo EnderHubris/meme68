@@ -103,7 +103,7 @@
 </div><hr>
 
 <div class="d-flex justify-content-center align-items-center" style="padding: 25px;">
-  <form class="p-4 bg-white shadow rounded" style="width: 100%; max-width: 400px;" on:submit={createAdmin}>
+  <form id="dataForm" class="p-4 shadow rounded" style="width: 100%; max-width: 400px;" on:submit={createAdmin}>
     <h2 class="mb-4 text-center">Create Admin</h2>
 
     <div class="mb-3">
