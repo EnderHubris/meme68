@@ -1,3 +1,5 @@
+import { NotifyFeedback } from '$lib/feedback';
+
 export const LikeMeme = async (event: Event, mid: string) => {
     event.preventDefault();
 
@@ -7,6 +9,11 @@ export const LikeMeme = async (event: Event, mid: string) => {
         credentials: "include",
         body: JSON.stringify({ mid: mid })
     });
+    const data = await response.json();
+
+    if (data && data.message) {
+        NotifyFeedback(data.message);
+    }
 };
 
 export const DisikeMeme = async (event: Event, mid: string) => {
@@ -18,6 +25,11 @@ export const DisikeMeme = async (event: Event, mid: string) => {
         credentials: "include",
         body: JSON.stringify({ mid: mid })
     });
+    const data = await response.json();
+
+    if (data && data.message) {
+        NotifyFeedback(data.message);
+    }
 };
 
 export const ShareMeme = async (event: Event, mid: string) => {

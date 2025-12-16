@@ -259,7 +259,9 @@ export async function LikedMeme(sessid, mid) {
             [mid, mid, sessid]
         );
         
-        return applyLiked && applyLiked.length === 1 && updateUser && updateUser.length === 1;
+        const success = applyLiked && applyLiked.affectedRows === 1 && updateUser && updateUser.affectedRows === 1;
+
+        return success;
     } catch (err) {
         console.error(`Error: ${err}`);
         return false;
@@ -317,7 +319,9 @@ export async function DislikeMeme(sessid, mid) {
             [mid, sessid, mid]
         );
 
-        return applyDisliked && applyDisliked.length === 1 && updateUser && updateUser.length === 1;
+        const success = applyDisliked && applyDisliked.affectedRows === 1 && updateUser && updateUser.affectedRows === 1;
+
+        return success;
     } catch (err) {
         console.error(`Error: ${err}`);
         return false;

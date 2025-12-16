@@ -83,6 +83,7 @@
     import { onMount } from 'svelte';
     import { GetMemes } from '$lib/collect';
     import { ViewMore } from '$lib/interact';
+    import { NotifyFeedback } from '$lib/feedback';
 
     let memes: any[] = [];
     let error = "";
@@ -114,6 +115,12 @@
                 credentials: "include",
                 body: JSON.stringify({ mid: mid })
             });
+
+            const data = await response.json();
+
+            if (data && data.message) {
+                NotifyFeedback(data.message);
+            }
     
             // refresh list
             await populate();

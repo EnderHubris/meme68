@@ -1,5 +1,7 @@
 <!-- typescript logic for the page to use -->
 <script lang="ts">
+    import { NotifyFeedback } from "$lib/feedback";
+
     // variables can be referenced in HTML elements after the script-end tag
     let name = "";
     let password = "";
@@ -20,6 +22,10 @@
         });
 
         const data = await response.json();
+
+        if (data && data.message) {
+            NotifyFeedback(data.message);
+        }
 
         if (data && data.success) {
             window.location.href = '/';

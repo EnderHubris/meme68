@@ -26,7 +26,7 @@
         liked_memes: any[],
         error: string,
         loading: boolean
-    } = { liked_memes: [], error: "", loading: false };
+    } = $state({ liked_memes: [], error: "", loading: false });
 
 	let { params }: { params: { id?: string } } = $props();
     let collectedData = $state(false);
@@ -35,10 +35,10 @@
         mid: string,
         tagString: string,
         likes: number
-    };
+    } = $state({ mid: "", tagString: "", likes: 0 });
 
     async function FetchMemeData(mid:string) {
-        if (!mid) return;
+        if (!mid || mid.length === 0) return { mid: mid, tagString: "", likes: 0 };
 
         try {
             const req = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/get_meme_info`, {
@@ -49,16 +49,17 @@
             });
             const data = await req.json();
 
-            memeInfo = data || { mid: mid, tagString: "", likes: 0 };
             collectedData = true;
+            return (data) ? { mid: data.mid, tagString: data.tagString, likes: data.likes } : { mid: mid, tagString: "", likes: 0 };
         } catch {}
+        
+        return { mid: mid, tagString: "", likes: 0 };
     }
 
 	async function populate() {
         try {
-            const mid = params.id || undefined;
-
-            await FetchMemeData(mid);
+            const mid = params.id || "";
+            memeInfo = await FetchMemeData(mid);
             likedMemeData = await FetchLikedMemes();
         } catch {}
     }

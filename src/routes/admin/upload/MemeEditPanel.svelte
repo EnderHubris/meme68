@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { NotifyFeedback } from "$lib/feedback";
+    
     export let mid: string;
 
     export let onClose: () => void; // similiar to a function pointer
@@ -17,6 +19,13 @@
                 newTagString: tagString
             })
         });
+
+        const data = await response.json();
+
+        if (data && data.message) {
+            NotifyFeedback(data.message);
+        }
+
         runAfter();
     };
 

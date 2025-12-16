@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { NotifyFeedback } from '$lib/feedback';
 
     let username = "";
     let email = "";
@@ -49,6 +50,12 @@
                 credentials: "include",
                 body: JSON.stringify({ username: adm_username })
             });
+
+            const data = await response.json();
+
+            if (data && data.message) {
+                NotifyFeedback(data.message);
+            }
     
             // refresh list
             await populate();
@@ -69,6 +76,12 @@
             if (!response.ok) {
                 error = "Failed to create admin";
                 return;
+            }
+
+            const data = await response.json();
+
+            if (data && data.message) {
+                NotifyFeedback(data.message);
             }
     
             // reset form
