@@ -143,3 +143,4 @@ vite.config.ts.timestamp-*
 # CUSTOM IGNORES
 DEV.md
 uploads/
+build/

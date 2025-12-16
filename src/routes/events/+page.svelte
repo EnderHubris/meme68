@@ -44,7 +44,7 @@
                 }
             }
         } catch {
-            error = "Failed to load memes";
+            error = "Failed to load meme of the day";
         } finally {
             loading = false;
         }
