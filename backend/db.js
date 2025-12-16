@@ -9,7 +9,7 @@ import { Hash_SHA256 } from "./utils.js";
 import assert from "assert";
 
 // ENV check
-assert(process.env.DB_USER && process.env.DB_PASS && process.env.DB_NAME, "[-] Missing ENV values!");
+assert(process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASS && process.env.DB_NAME, "[-] Missing ENV values!");
 console.log("[+] ENV properly configured!");
 
 const db = mysql.createPool({
