@@ -13,7 +13,7 @@ assert(process.env.DB_USER && process.env.DB_PASS && process.env.DB_NAME, "[-] M
 console.log("[+] ENV properly configured!");
 
 const db = mysql.createPool({
-    host: 'localhost',
+    host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
