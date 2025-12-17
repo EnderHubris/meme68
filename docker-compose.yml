@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
     volumes:
       - certs:/etc/letsencrypt
-      - ./webroot:/var/www/certbot
+      - ../webroot:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; done;'"
 
   app:
@@ -41,7 +41,7 @@ services:
     volumes:
       - uploads:/var/www/meme68/uploads
       - certs:/etc/letsencrypt # allow nginx to view the SSL certs
-      - ./webroot:/var/www/certbot # allow for certbot challenge
+      - ../webroot:/var/www/certbot # allow for certbot challenge
     depends_on:
       db:
         condition: service_healthy
