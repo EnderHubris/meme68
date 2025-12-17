@@ -49,5 +49,5 @@ jobs:
         run: |
           echo "ssh $TARGET id"
           ssh $TARGET id
-          #echo "ssh $TARGET /home/dock/production.sh"
-          #ssh $TARGET /home/dock/production.sh
+          echo "ssh $TARGET /home/dock/production.sh"
+          ssh $TARGET /home/dock/production.sh
