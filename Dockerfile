@@ -23,6 +23,8 @@ COPY backend /var/www/project/backend
 
 # prep build handler and build NGINX production files
 RUN chown -R www-data:www-data /var/www
+# allow www-data group members to manipulate web-files
+RUN chmod -R 775 /var/www
 RUN chmod +x /var/www/project/build_svelte.sh
 RUN su www-data -c 'bash /var/www/project/build_svelte.sh'
 
