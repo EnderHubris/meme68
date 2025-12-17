@@ -35,6 +35,11 @@ RUN mkdir -p /etc/letsencrypt/live/meme68.com && \
         -out /etc/letsencrypt/live/meme68.com/fullchain.pem \
         -subj "/CN=meme68.com"
 
+# Make the directory owned by www-data
+RUN chown -R www-data:www-data /var/www
+# Ensure Nginx can read/write
+RUN chmod -R 755 /var/www/certbot
+
 EXPOSE 80 443
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
