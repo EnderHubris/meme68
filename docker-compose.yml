@@ -39,7 +39,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - uploads:/var/www/meme68/uploads
+      - uploads:/var/www/project/uploads
       - certs:/etc/letsencrypt # allow nginx to view the SSL certs
       - ../webroot:/var/www/certbot # allow for certbot challenge
     depends_on:
