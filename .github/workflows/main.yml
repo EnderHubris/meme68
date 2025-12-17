@@ -1,0 +1,54 @@
+name: Launch Main
+
+on: 
+  workflow_dispatch:
+  push: # this workflow will execute when main gets a new commit
+    branches:
+      - 'main'
+
+env:
+  HOST: meme68.com
+  USER: dock
+  TARGET: dock@meme68.com
+  RUN: ssh -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no dock@meme68.com
+  COPY: scp -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+  
+jobs:
+  main_workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Files
+        uses: actions/checkout@v2
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.ID_ED25519 }}
+          passphrase: ${{ secrets.ID_ED25519_PASS }}
+          name: id_ed25519
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - name: Import ENV file
+        run: |
+          echo "Importing Secrets. . ."
+          cat << 'EOF' > /dev/shm/.env
+          ${{ secrets.ENV_FILE }}
+          EOF
+          echo "Exporting env to remote server. . ."
+          scp -o StrictHostKeyChecking=no /dev/shm/.env "$TARGET:~/.env"
+
+          cat << 'EOF' > /dev/shm/meme68.conf
+          ${{ secrets.NGINX_CONF }}
+          EOF
+          echo "Exporting nginx config to remote server. . ."
+          scp -o StrictHostKeyChecking=no /dev/shm/meme68.conf "$TARGET:~/meme68.conf"
+
+          cat << 'EOF' > /dev/shm/supervisord.conf
+          ${{ secrets.BACKEND_CONF }}
+          EOF
+          echo "Exporting backend automation to remote server. . ."
+          scp -o StrictHostKeyChecking=no /dev/shm/supervisord.conf "$TARGET:~/supervisord.conf"
+      - name: Update Server-Side
+        run: |
+          echo "ssh $TARGET id"
+          ssh $TARGET id
+          #echo "ssh $TARGET /home/dock/production.sh"
+          #ssh $TARGET /home/dock/production.sh
