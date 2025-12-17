@@ -93,9 +93,25 @@ export async function DeleteMeme(fileName) {
             else console.log("File deleted:", filePath);
         })
 
+        // remove meme entry
         const result = await query(
             "DELETE FROM memes WHERE mid = ?",
             [fileName]
+        );
+
+        // remove entry from all users who liked the meme
+        const mid = fileName;
+        const pushUpdate = await query(
+            `
+            UPDATE users
+            SET liked_memes =
+                JSON_REMOVE(
+                    liked_memes,
+                    JSON_UNQUOTE(JSON_SEARCH(liked_memes, 'all', ?))
+                )
+            WHERE JSON_CONTAINS(liked_memes, JSON_QUOTE(?))
+            `,
+            [mid,mid]
         );
 
         return result && result.affectedRows === 1;
