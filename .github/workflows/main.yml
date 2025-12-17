@@ -7,10 +7,10 @@ on:
       - 'main'
 
 env:
-  HOST: meme68.com
+  HOST: ssh.meme68.com
   USER: dock
-  TARGET: dock@meme68.com
-  RUN: ssh -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no dock@meme68.com
+  TARGET: dock@ssh.meme68.com
+  RUN: ssh -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no dock@ssh.meme68.com
   COPY: scp -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
   
 jobs:
