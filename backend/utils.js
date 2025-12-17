@@ -76,7 +76,6 @@ export function NormalizeTags(tagString) {
         // remove weird characters from tags
         const tag = tagList[i]
             .toLowerCase()
-            .trim()
             .replace(/-/g, '_')         // replace hyphen for underscore
             .replace(/[^a-z0-9_]/g, '') // only allow alphanum and underscore (no unicode or other weird chars)
             .replace(/_+/g, '_')        // merge multiple underscores into a single underscore
