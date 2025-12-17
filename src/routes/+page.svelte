@@ -53,7 +53,6 @@
                 const tag = tagList[i]
                     .toLowerCase()
                     .trim()
-                    .replace(/\s+/g, '_')       // replace space for underscore
                     .replace(/-/g, '_')         // replace hyphen for underscore
                     .replace(/[^a-z0-9_]/g, '') // only allow alphanum and underscore (no unicode or other weird chars)
                     .replace(/_+/g, '_')        // merge multiple underscores into a single underscore
@@ -68,15 +67,10 @@
                 }
             }
 
-            tagInput = "";
-            console.log(filterTags);
+            console.log(`User Entered Tags -> ${JSON.stringify(filterTags)}`);
             await populate();
             filterTags = [];
         }
-    }
-
-    function removeTag(tag: string) {
-        filterTags = filterTags.filter(t => t !== tag);
     }
 
     let filteredMemes = $state([{mid:"", tagString: "", likes: 0}]);
@@ -142,17 +136,6 @@
     <div class="col-12 col-md flex-grow-1">
       <label class="form-label small mb-1">Tags (separate multiple tags with a comma)</label>
       <div class="form-control d-flex flex-wrap gap-2 p-2">
-        {#each filterTags as tag}
-          <span class="badge bg-primary d-flex align-items-center">
-            {tag}
-            <button
-              type="button"
-              class="btn-close btn-close-white ms-2"
-              on:click={() => removeTag(tag)}
-            />
-          </span>
-        {/each}
-
         <input
           class="border-0 flex-grow-1"
           placeholder="Add tag"
