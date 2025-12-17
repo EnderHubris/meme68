@@ -16,5 +16,9 @@ if [ -f /etc/letsencrypt/live/meme68.com/fullchain.pem ] && [ -f /etc/letsencryp
     supervisorctl restart nginx
 fi
 
+# ensure certbot challenge directory is present and modifiable by www-data
+mkdir -p /var/www/certbot/.well-known/acme-challenge
+chown -R www-data:www-data /var/www/certbot
+
 # Keep container alive
 wait
