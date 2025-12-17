@@ -57,3 +57,39 @@ export function GenerateSignature(IP) {
 
     return newSig.substring(0,24);
 }
+
+/**
+ * Normalize inputed tags for the database
+ *
+ * @param {string} tagString - comma separated list of tag strings ie "cat,apple,funny"
+ * @returns {string} normalized tag string for database
+**/
+export function NormalizeTags(tagString) {
+    const tagList = tagString
+        ?.split(',')
+        .map(t => t.trim().toLowerCase());
+
+    let cleanedTagString = "";
+
+    // iterate over the tags in the string array
+    for (let i = 0; i < tagList.length; ++i) {
+        // remove weird characters from tags
+        const tag = tagList[i]
+            .toLowerCase()
+            .trim()
+            .replace(/-/g, '_')         // replace hyphen for underscore
+            .replace(/[^a-z0-9_]/g, '') // only allow alphanum and underscore (no unicode or other weird chars)
+            .replace(/_+/g, '_')        // merge multiple underscores into a single underscore
+            .replace(/^_+|_+$/g, '');   // remove pre-hang and post-hang underscores
+
+        // only write non-empty strings
+        if (tag.length > 0) {
+            cleanedTagString += tag;
+            if (i < tagList.length - 1) {
+                cleanedTagString += ",";
+            }
+        }
+    }
+
+    return cleanedTagString;
+}

@@ -1,5 +1,6 @@
 import fs from "fs";
 
+import { NormalizeTags } from './utils.js';
 import { query } from './db.js';
 import { UPLOAD_DIR } from './server.js';
 import { randomInt } from "crypto";
@@ -39,13 +40,13 @@ export async function GetMemeInfo(mid) {
 /**
  * Upload meme information to the Database
  * 
- * @param {any} file - meme image file
+ * @param {any} fileName - file name of meme image
  * @param {string} tags - comma separated list string
  * @returns {Promise<boolean>} Returns if Meme upload was successful
 **/
 export async function UploadMeme(fileName, tags) {
     try {
-        const tagString = tags || "";
+        const tagString = NormalizeTags(tags) || "";
         if (!fileName) {
             console.log("Missing file-name string");
             return false;
@@ -135,37 +136,7 @@ export async function EditMeme(mid, newTagString) {
         }
 
         // try to clean-up the tagString (remove bad formatting)
-        if (newTagString.length > 0) {
-            const tagList = newTagString
-                ?.split(',')
-                .map(t => t.trim().toLowerCase());
-
-            console.log(`tag list -> ${JSON.stringify(tagList)}`)
-
-            let cleanedTagString = "";
-            for (let i = 0; i < tagList.length; ++i) {
-
-                // remove weird characters from tags
-                const tag = tagList[i]
-                    .toLowerCase()
-                    .trim()
-                    .replace(/\s+/g, '_')       // replace space for underscore
-                    .replace(/-/g, '_')         // replace hyphen for underscore
-                    .replace(/[^a-z0-9_]/g, '') // only allow alphanum and underscore (no unicode or other weird chars)
-                    .replace(/_+/g, '_')        // merge multiple underscores into a single underscore
-                    .replace(/^_+|_+$/g, '');   // remove pre-hang and post-hang underscores
-
-                // only write non-empty strings
-                if (tag.length > 0) {
-                    cleanedTagString += tag;
-                    if (i < tagList.length - 1) {
-                        cleanedTagString += ",";
-                    }
-                }
-            }
-            newTagString = cleanedTagString;
-            console.log(`new tag string list -> ${newTagString}`)
-        }
+        newTagString = NormalizeTags(newTagString);
 
         const result = await query(
             "UPDATE memes SET tagString = ? WHERE mid = ?",
