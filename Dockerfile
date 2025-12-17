@@ -37,7 +37,7 @@ RUN mkdir -p /etc/letsencrypt/live/meme68.com && \
         -newkey rsa:2048 \
         -keyout /etc/letsencrypt/live/meme68.com/privkey.pem \
         -out /etc/letsencrypt/live/meme68.com/fullchain.pem \
-        -subj "/CN=meme68.com"
+        -subj "/CN=meme68.com Dummy Certificate/O=Cert Initializing"
 
 EXPOSE 80 443
 
