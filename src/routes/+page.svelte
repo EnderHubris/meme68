@@ -42,11 +42,30 @@
     async function handleTagKey(e: KeyboardEvent) {
         if (e.key === "Enter") {
             e.preventDefault();
-            const tag = tagInput.trim().toLowerCase();
 
-            // creates array of strings from a comma-separated string
-            if (tag && !filterTags.includes(tag)) {
-                filterTags = [...filterTags, tag];
+            const tagList = tagInput
+                ?.split(',')
+                .map(t => t.trim().toLowerCase());
+
+            for (let i = 0; i < tagList.length; ++i) {
+
+                // remove weird characters from tags
+                const tag = tagList[i]
+                    .toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, '_')       // replace space for underscore
+                    .replace(/-/g, '_')         // replace hyphen for underscore
+                    .replace(/[^a-z0-9_]/g, '') // only allow alphanum and underscore (no unicode or other weird chars)
+                    .replace(/_+/g, '_')        // merge multiple underscores into a single underscore
+                    .replace(/^_+|_+$/g, '');   // remove pre-hang and post-hang underscores
+
+                // only write non-empty strings
+                if (tag.length > 0) {
+                    // creates array of strings from a comma-separated string
+                    if (tag && !filterTags.includes(tag)) {
+                        filterTags = [...filterTags, tag];
+                    }
+                }
             }
 
             tagInput = "";
