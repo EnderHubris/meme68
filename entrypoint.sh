@@ -2,7 +2,7 @@
 set -e
 
 # Start supervisord in the background
-/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf &
+/usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf &
 
 # Wait until supervisor socket exists
 echo "Waiting for supervisord socket..."
