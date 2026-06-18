@@ -20,15 +20,6 @@ services:
     networks:
       - app_internal
 
-  certbot:
-    image: certbot/certbot
-    container_name: meme68_certbot
-    restart: unless-stopped
-    volumes:
-      - certs:/etc/letsencrypt
-      - ../webroot:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; done;'"
-
   app:
     container_name: meme68_web
     ports: # open port(s) on HOST
@@ -40,19 +31,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - uploads:/var/www/project/uploads
-      - certs:/etc/letsencrypt # allow nginx to view the SSL certs
-      - ../webroot:/var/www/certbot # allow for certbot challenge
     depends_on:
       db:
         condition: service_healthy
-      certbot:
-        condition: service_started
     networks:
       - app_internal
 
 volumes:
   db_data:
-  certs:
   uploads:
 
 networks:

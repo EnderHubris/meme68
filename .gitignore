@@ -142,7 +142,5 @@ vite.config.ts.timestamp-*
 
 # CUSTOM IGNORES
 DEV.md
-meme68.conf
-supervisord.conf
 uploads/
 build/
