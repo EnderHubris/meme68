@@ -2,7 +2,7 @@ services:
   db:
     image: mysql:latest
     container_name: meme68_db
-    expose:
+    expose: # do not open port(s) on HOST
       - "3306"
     restart: always
     environment:
@@ -14,30 +14,45 @@ services:
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASS}"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
+      interval: 15s
+      timeout: 15s
+      retries: 15
     networks:
       - app_internal
 
+  certbot:
+    image: certbot/certbot
+    container_name: meme68_certbot
+    restart: unless-stopped
+    volumes:
+      - certs:/etc/letsencrypt
+      - ../webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; done;'"
+
   app:
     container_name: meme68_web
-    restart: unless-stopped
-    ports:
+    ports: # open port(s) on HOST
       - "80:80"
+      - "443:443"
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
       - uploads:/var/www/project/uploads
+      - certs:/etc/letsencrypt # allow nginx to view the SSL certs
+      - ../webroot:/var/www/certbot # allow for certbot challenge
     depends_on:
       db:
         condition: service_healthy
+      certbot:
+        condition: service_started
     networks:
       - app_internal
 
 volumes:
   db_data:
+  certs:
   uploads:
 
 networks:

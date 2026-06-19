@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y supervisor sudo nodejs npm net-tools
 # initial file system preperation
 RUN mkdir -p /var/www/meme68/uploads
 RUN mkdir -p /var/www/project
+# create challenge directory before starting certbot
+RUN mkdir -p /var/www/certbot/.well-known/acme-challenge
 
 RUN chsh -s /bin/bash www-data
 
@@ -29,6 +31,13 @@ RUN su www-data -c 'bash /var/www/project/build_svelte.sh'
 # configure NGINX
 RUN rm /etc/nginx/conf.d/default.conf
 COPY meme68.conf /etc/nginx/conf.d/meme68.conf
+# give NGINX a dummy cert so it can start up
+RUN mkdir -p /etc/letsencrypt/live/meme68.com && \
+    openssl req -x509 -nodes -days 365 \
+        -newkey rsa:2048 \
+        -keyout /etc/letsencrypt/live/meme68.com/privkey.pem \
+        -out /etc/letsencrypt/live/meme68.com/fullchain.pem \
+        -subj "/CN=meme68.com Dummy Certificate/O=Cert Initializing"
 
 EXPOSE 80 443
 
