@@ -45,6 +45,8 @@ services:
   app:
     container_name: meme68_web
     restart: unless-stopped
+    ports:
+      - "80"
     build:
       context: .
       dockerfile: Dockerfile
