@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 
 import { NormalizeTags } from './utils.js';
 import { query } from './db.js';
@@ -14,23 +15,22 @@ import { randomInt } from "crypto";
 export async function GetMemeInfo(mid) {
     try {
         const row = await query(
-            "SELECT mid, tagString, likes FROM memes WHERE mid = ? LIMIT 1",
+            "SELECT mid, file_ext, tagString, likes FROM memes WHERE mid = ? LIMIT 1",
             [mid]
         );
+
+        const r_data = (row.length > 0) ? (
+            { mid: mid, file_ext: row[0].file_ext, tagString: row[0].tagString, likes: row[0].likes }
+        ) : (
+            { mid: mid, file_ext: "", tagString: "", likes: 0 } 
+        )
         
-        return {
-            mid: mid,
-            tagString: row[0].tagString,
-            likes: row[0].likes
-        } || {
-            mid: mid,
-            tagString: "",
-            likes: 0
-        }
+        return r_data;
     } catch (err) {
         console.error(err);
         return {
             mid: mid,
+            file_ext: "",
             tagString: "",
             likes: 0
         }
@@ -53,10 +53,14 @@ export async function UploadMeme(fileName, tags) {
         }
 
         console.log(`MEME DATA -> ${fileName} : ${tagString}`);
+
+        // strip the file ext to acquire the meme id (mid)
+        const ext = path.extname(fileName);
+        const mid = path.basename(fileName, ext);
         
         const result = await query(
-            "INSERT INTO memes (mid, tagString) VALUES (?, ?)",
-            [fileName, tagString]
+            "INSERT INTO memes (mid, file_ext, tagString) VALUES (?, ?, ?)",
+            [mid, ext, tagString]
         );
     
         if (result) {
@@ -164,7 +168,7 @@ export async function EditMeme(mid, newTagString) {
 export async function GetMemes() {
     try {
         const rows = await query(
-            "SELECT mid, likes, tagString, created_at FROM memes"
+            "SELECT mid, file_ext, likes, tagString, created_at FROM memes"
         );
     
         return rows;
@@ -182,7 +186,7 @@ export async function GetMemes() {
 export async function GetRecentMemes() {
     try {
         const rows = await query(
-            `SELECT mid, likes, tagString, created_at 
+            `SELECT mid, file_ext, likes, tagString, created_at 
             FROM memes
             ORDER BY created_at DESC
             LIMIT 10`
@@ -370,14 +374,15 @@ export async function UpdateMemeOfTheDay() {
 export async function GetMemeOfTheDay() {
     const FetchData = async () => {
         const memeRows = await query(
-            "SELECT mid, tagString, likes FROM memes WHERE mid = (SELECT mid FROM meme_of_the_day LIMIT 1) LIMIT 1"
-        )
+            "SELECT mid, file_ext, tagString, likes FROM memes WHERE mid = (SELECT mid FROM meme_of_the_day LIMIT 1) LIMIT 1"
+        );
 
         const memeData = (memeRows && memeRows[0]) ? {
             mid: memeRows[0].mid,
+            file_ext: memeRows[0].file_ext,
             tagString: memeRows[0].tagString,
             likes: memeRows[0].likes
-        } : { mid: "", tagString: "", likes: 0 };
+        } : { mid: "", file_ext: "", tagString: "", likes: 0 };
 
         return memeData;
     }
@@ -388,6 +393,7 @@ export async function GetMemeOfTheDay() {
         console.error(`Error: ${err}`);
         return {
             mid: "",
+            file_ext: "",
             tagString: "",
             likes: 0
         };

@@ -51,6 +51,7 @@
         const formData = new FormData();
 
         files.forEach((entry, i) => {
+            console.log("[*] Appending:", entry.file);
             formData.append("files", entry.file);
             formData.append(`tags[${i}]`, entry.tags.join(","));
         });
@@ -239,7 +240,7 @@
             </div>
             
             <img
-                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
+                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}${meme.file_ext}`}
                 alt="meme image"
                 class="meme-img img-fluid rounded border mb-2"
                 on:click={(event) => ViewMore(event, meme.mid)}
