@@ -20,5 +20,4 @@ fi
 mkdir -p /var/www/certbot/.well-known/acme-challenge
 chown -R www-data:www-data /var/www/certbot
 
-# Keep container alive
-wait
+exec nginx -g "daemon off;"
