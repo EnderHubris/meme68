@@ -9,6 +9,18 @@
     };
 
     let files: FileWithTags[] = [];
+    let previewUrls: string[] = [];
+
+    $: {
+        // revoke old URLs before generating new ones to avoid leaking memory
+        previewUrls.forEach(url => URL.revokeObjectURL(url));
+        previewUrls = files.map(entry => URL.createObjectURL(entry.file));
+    }
+    function removeFile(index: number) {
+        // revoke the object URL to avoid memory leaks before removing
+        URL.revokeObjectURL(previewUrls[index]);
+        files = files.filter((_, i) => i !== index);
+    }
 
     function handleFilesSelected(event: Event) {
         const input = event.target as HTMLInputElement;
@@ -174,41 +186,58 @@
 
   {#each files as entry, i}
     <div class="card mb-3 shadow-sm">
-      <div class="card-body text-start">
-        <strong>{entry.file.name}</strong>
+        <div class="card-body text-start">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <strong>{entry.file.name}</strong>
+                <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm"
+                    on:click={() => removeFile(i)}
+                    >
+                    Remove
+                </button>
+            </div>
 
-        <!-- Tags -->
-        <div
-          class="form-control d-flex flex-wrap gap-2 p-2 mt-2"
-          style="min-height: 44px;"
-        >
-          {#each entry.tags as tag}
-            <span class="badge bg-primary d-flex align-items-center">
-              {tag}
-              <button
-                type="button"
-                class="btn-close btn-close-white ms-2"
-                on:click={() => removeTag(i, tag)}
-              ></button>
-            </span>
-          {/each}
+            <!-- Image preview -->
+            <img
+                src={previewUrls[i]}
+                alt={entry.file.name}
+                class="img-fluid rounded border mb-2"
+                style="max-height: 150px; object-fit: contain;"
+            >
 
-          <input
-            type="text"
-            class="border-0 flex-grow-1"
-            placeholder="Add tag"
-            bind:value={entry.input}
-            on:keydown={(e) => handleKeydown(e, i)}
-          >
+            <!-- Tags -->
+            <div
+                class="form-control d-flex flex-wrap gap-2 p-2 mt-2"
+                style="min-height: 44px;"
+            >
+                {#each entry.tags as tag}
+                <span class="badge bg-primary d-flex align-items-center">
+                    {tag}
+                    <button
+                        type="button"
+                        class="btn-close btn-close-white ms-2"
+                        on:click={() => removeTag(i, tag)}
+                    ></button>
+                </span>
+                {/each}
+
+                <input
+                    type="text"
+                    class="border-0 flex-grow-1"
+                    placeholder="Add tag"
+                    bind:value={entry.input}
+                    on:keydown={(e) => handleKeydown(e, i)}
+                >
+            </div>
+
+            <!-- Hidden input per file -->
+            <input
+                type="hidden"
+                name={`tags[${i}]`}
+                value={entry.tags.join(',')}
+            >
         </div>
-
-        <!-- Hidden input per file -->
-        <input
-          type="hidden"
-          name={`tags[${i}]`}
-          value={entry.tags.join(',')}
-        >
-      </div>
     </div>
   {/each}
 
