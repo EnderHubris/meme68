@@ -24,11 +24,16 @@ services:
     container_name: meme68_web
     ports: # open port(s) on HOST
       - "80:80"
-      - "443:443"
     restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.webapp.rule=Host(`meme68.com`)"
+      - "traefik.http.routers.webapp.entrypoints=websecure"
+      - "traefik.http.routers.webapp.tls.certresolver=letsencrypt"
+      - "traefik.http.services.webapp.loadbalancer.server.port=80"
     volumes:
       - uploads:/var/www/project/uploads
     depends_on:
