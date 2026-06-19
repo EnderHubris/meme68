@@ -22,6 +22,9 @@ services:
 
   app:
     container_name: meme68_web
+    ports: # open port(s) on HOST
+      - "80"
+      - "443"
     restart: unless-stopped
     build:
       context: .
