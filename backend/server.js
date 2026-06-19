@@ -633,6 +633,8 @@ app.post("/upload", upload.array("files", 10), async (req, res) => {
                 return res.json({ error: "Invalid file content" });
             }
 
+            console.log("[*] Uploading:", file.filename);
+
             const tags = req.body.tags[i];
             const uploaded = await UploadMeme(file.filename, tags);
             if (uploaded) ++uploadCount;

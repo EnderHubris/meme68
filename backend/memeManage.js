@@ -17,16 +17,14 @@ export async function GetMemeInfo(mid) {
             "SELECT mid, tagString, likes FROM memes WHERE mid = ? LIMIT 1",
             [mid]
         );
+
+        const r_data = (row.length > 0) ? (
+            { mid: mid, tagString: row[0].tagString, likes: row[0].likes }
+        ) : (
+            { mid: mid, tagString: "", likes: 0 } 
+        )
         
-        return {
-            mid: mid,
-            tagString: row[0].tagString,
-            likes: row[0].likes
-        } || {
-            mid: mid,
-            tagString: "",
-            likes: 0
-        }
+        return r_data;
     } catch (err) {
         console.error(err);
         return {

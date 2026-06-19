@@ -51,6 +51,7 @@
         const formData = new FormData();
 
         files.forEach((entry, i) => {
+            console.log("[*] Appending:", entry.file);
             formData.append("files", entry.file);
             formData.append(`tags[${i}]`, entry.tags.join(","));
         });
