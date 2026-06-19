@@ -1,8 +1,30 @@
 services:
+  traefik:
+    image: traefik:v3
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.email=your@email.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - app_internal
+
   db:
     image: mysql:latest
     container_name: meme68_db
-    expose: # do not open port(s) on HOST
+    expose:
       - "3306"
     restart: always
     environment:
@@ -22,15 +44,13 @@ services:
 
   app:
     container_name: meme68_web
-    expose:
-      - "80"
     restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.webapp.rule=Host(`meme68.com`)"
+      - "traefik.http.routers.webapp.rule=Host(`meme68.com`) || Host(`www.meme68.com`)"
       - "traefik.http.routers.webapp.entrypoints=websecure"
       - "traefik.http.routers.webapp.tls.certresolver=letsencrypt"
       - "traefik.http.services.webapp.loadbalancer.server.port=80"
