@@ -33,12 +33,13 @@
 
     let memeInfo: {
         mid: string,
+        file_ext: string,
         tagString: string,
         likes: number
-    } = $state({ mid: "", tagString: "", likes: 0 });
+    } = $state({ mid: "", file_ext: "", tagString: "", likes: 0 });
 
     async function FetchMemeData(mid:string) {
-        if (!mid || mid.length === 0) return { mid: mid, tagString: "", likes: 0 };
+        if (!mid || mid.length === 0) return { mid: mid, file_ext: "", tagString: "", likes: 0 };
 
         try {
             const req = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/get_meme_info`, {
@@ -50,10 +51,15 @@
             const data = await req.json();
 
             collectedData = true;
-            return (data) ? { mid: data.mid, tagString: data.tagString, likes: data.likes } : { mid: mid, tagString: "", likes: 0 };
+            return (data) ? {
+                mid: data.mid,
+                file_ext: data.file_ext,
+                tagString: data.tagString,
+                likes: data.likes
+            } : { mid: mid, file_ext: "", tagString: "", likes: 0 };
         } catch {}
         
-        return { mid: mid, tagString: "", likes: 0 };
+        return { mid: mid, file_ext: "", tagString: "", likes: 0 };
     }
 
 	async function populate() {
@@ -76,7 +82,7 @@
                 <div class="text-muted small mb-2">{memeInfo.tagString}</div>
 
                 <img
-                    src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeInfo.mid}`}
+                    src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeInfo.mid}${memeInfo.file_ext}`}
                     alt="meme image"
                     class="img-fluid rounded shadow border mb-2"
                 >

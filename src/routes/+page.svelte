@@ -73,7 +73,7 @@
         }
     }
 
-    let filteredMemes = $state([{mid:"", tagString: "", likes: 0}]);
+    let filteredMemes = $state([{mid:"", file_ext:"", tagString: "", likes: 0}]);
 
     let showLikedOnly = false;
     let showPopular = false;
@@ -256,7 +256,7 @@
                 </div>
 
                 <img
-                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}`}
+                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}${meme.file_ext}`}
                 alt="meme image"
                 class="meme-img img-fluid rounded border mb-2"
                 on:click={(event) => ViewMore(event, meme.mid)}

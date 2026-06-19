@@ -5,12 +5,13 @@
     let memeData: {
         meme: {
             mid: string,
+            file_ext: string,
             tagString: string,
             likes: number
         },
         error: string,
         loading: boolean
-    } = { meme: { mid: "", tagString: "", likes: 0 }, error: "", loading: false };
+    } = { meme: { mid: "", file_ext: "", tagString: "", likes: 0 }, error: "", loading: false };
 
     /**
      * Fetches meme of the day selected by the server
@@ -18,9 +19,10 @@
     async function FetchMeme() {
         let meme: {
             mid: string,
+            file_ext: string,
             tagString: string,
             likes: number
-        } = { mid: "", tagString: "", likes: 0 };
+        } = { mid: "", file_ext: "", tagString: "", likes: 0 };
         let error = "";
         let loading = false;
 
@@ -39,6 +41,7 @@
             } else {
                 meme = {
                     mid: data.mid,
+                    file_ext: data.file_ext,
                     tagString: data.tagString,
                     likes: data.likes
                 }
@@ -85,7 +88,7 @@
             </strong>
 
             <img
-              src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeData.meme.mid}`}
+              src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeData.meme.mid}${memeData.meme.file_ext}`}
               alt="meme image"
               class="meme-img img-fluid rounded border mb-3"
               on:click={(event) => ViewMore(event, memeData.meme.mid)}

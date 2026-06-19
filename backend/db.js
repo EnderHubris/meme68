@@ -42,6 +42,7 @@ async function Initialize() {
         await query(`
             CREATE TABLE IF NOT EXISTS \`memes\` (
                 \`mid\` varchar(256) NOT NULL,
+                \`file_ext\` varchar(8) NOT NULL,
                 \`likes\` bigint unsigned DEFAULT '0',
                 \`tagString\` text NOT NULL,
                 \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,

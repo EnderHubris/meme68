@@ -28,7 +28,9 @@ const allowedOrigins = [
     `http://localhost:80`,
     `http://localhost:8080`,
     `http://localhost:5173`,
-    `https://localhost:443`
+    `https://localhost:443`,
+    process.env.DEV_HOST | "",
+    process.env.DEV_BACK_HOST | "",
 ];
 
 console.log(`Allowed Origins\n|____ ${allowedOrigins}\n`);
@@ -538,6 +540,7 @@ app.post('/get_meme_info', async (req, res) => {
 
         return res.json({
             mid: memeData.mid,
+            file_ext: memeData.file_ext,
             tagString: memeData.tagString,
             likes: memeData.likes,
         });
@@ -567,16 +570,25 @@ app.get('/say_my_name', async (req, res) => {
 
 app.get('/meme_of_the_day', async (req, res) => {
     try {
-        const data = await GetMemeOfTheDay();
+        let data = await GetMemeOfTheDay();
 
         console.log(`[*] MEME OF THE DAY -> ${JSON.stringify({
             mid: data.mid,
+            file_ext: data.file_ext,
             tagString: data.tagString,
             likes: data.likes
-        })}`)
+        })}`);
+
+        // update meme of the day if the entry is
+        // potentially corrupted
+        if (data.mid.length === 0) {
+            await UpdateMemeOfTheDay();
+            data = await GetMemeOfTheDay();
+        }
 
         return res.json({
             mid: data.mid,
+            file_ext: data.file_ext,
             tagString: data.tagString,
             likes: data.likes
         });
@@ -588,14 +600,25 @@ app.get('/meme_of_the_day', async (req, res) => {
 
 //####################################################################################
 
+import { randomBytes } from 'crypto';
+
 const ALLOWED_TYPES = [
     "image/png",
     "image/jpeg",
     "image/jpg"
 ];
 
+// hash the name but preserve the ext
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const randomName = randomBytes(16).toString("hex");
+        cb(null, `${randomName}${ext}`);
+    }
+});
 const upload = multer({
-    dest: UPLOAD_DIR,
+    storage,
     limits: {
         fileSize: 50 * 1024 * 1024 // 50MB
     },
