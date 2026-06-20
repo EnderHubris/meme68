@@ -21,7 +21,7 @@ import multer from "multer";
 import { fileTypeFromFile } from "file-type";
 import fs from "fs";
 import path from "path";
-export const UPLOAD_DIR = process.env.UPLOAD_DIR | "uploads/";
+export const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "uploads/";
 
 // try to mitigate from sending response data back to sketchy places
 const allowedOrigins = [
@@ -29,8 +29,8 @@ const allowedOrigins = [
     `http://localhost:8080`,
     `http://localhost:5173`,
     `https://localhost:443`,
-    process.env.DEV_HOST | "",
-    process.env.DEV_BACK_HOST | "",
+    process.env.DEV_HOST ?? "",
+    process.env.DEV_BACK_HOST ?? "",
 ];
 
 console.log(`Allowed Origins\n|____ ${allowedOrigins}\n`);
