@@ -50,7 +50,7 @@
 
       <div class="modal-header">
         <h5 class="modal-title">Edit Meme</h5>
-        <button class="btn-close" on:click={onClose}></button>
+        <button class="btn-close" oclick={onClose}></button>
       </div>
 
       <div class="modal-body">
@@ -63,8 +63,8 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" on:click={onClose}>Cancel</button>
-        <button class="btn btn-primary" on:click={submit}>Save</button>
+        <button class="btn btn-secondary" onclick={onClose}>Cancel</button>
+        <button class="btn btn-primary" onclick={submit}>Save</button>
       </div>
 
     </div>

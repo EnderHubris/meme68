@@ -91,7 +91,7 @@
               src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${memeData.meme.mid}${memeData.meme.file_ext}`}
               alt="meme image"
               class="meme-img img-fluid rounded border mb-3"
-              on:click={(event) => ViewMore(event, memeData.meme.mid)}
+              onclick={(event) => ViewMore(event, memeData.meme.mid)}
             />
 
             <div class="text-muted small">

@@ -175,7 +175,7 @@
                         <a
                         class="dropdown-item text-danger"
                         href="#"
-                        on:click|preventDefault={handleLogout}
+                        onclick={handleLogout}
                         >
                         Logout
                         </a>
@@ -187,7 +187,7 @@
 
             <button
                 class="btn btn-outline-secondary btn-sm"
-                on:click={toggleTheme}
+                onclick={toggleTheme}
             >
                 {dark ? '🌙' : '☀️'}
             </button>
