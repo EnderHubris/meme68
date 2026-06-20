@@ -4,9 +4,12 @@ RUN apt-get update && apt-get install -y supervisor sudo nodejs npm net-tools
 
 # initial file system preperation
 RUN mkdir -p /var/www/meme68
-RUN mkdir -p /var/www/project
+RUN mkdir -p /var/www/project/uploads
 # create challenge directory before starting certbot
 RUN mkdir -p /var/www/certbot/.well-known/acme-challenge
+
+# ensure www-data can read/write to the volume endpoint
+RUN chown -R www-data:www-data /var/www/project/
 
 RUN chsh -s /bin/bash www-data
 
