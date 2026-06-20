@@ -50,7 +50,7 @@
 
       <div class="modal-header">
         <h5 class="modal-title">Edit Meme</h5>
-        <button class="btn-close" oclick={onClose}></button>
+        <button class="btn-close" onclick={onClose}></button>
       </div>
 
       <div class="modal-body">
