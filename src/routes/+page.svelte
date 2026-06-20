@@ -26,18 +26,18 @@
         memes: any[],
         error: string,
         loading: boolean
-    } = { memes: [], error: "", loading: false };
+    } = $state({ memes: [], error: "", loading: false });
 
     let likedMemeData: {
         liked_memes: any[],
         error: string,
         loading: boolean
-    } = { liked_memes: [], error: "", loading: false };
+    } = $state({ liked_memes: [], error: "", loading: false });
 
-    let filterTags: string[] = [];
-    let tagInput = "";
-    let createdAfter = "";   // yyyy-mm-dd format
-    let createdBefore = "";
+    let filterTags: string[] = $state([]);
+    let tagInput = $state("");
+    let createdAfter = $state("");   // yyyy-mm-dd format
+    let createdBefore = $state("");
 
     async function handleTagKey(e: KeyboardEvent) {
         if (e.key === "Enter") {
@@ -48,19 +48,15 @@
                 .map(t => t.trim().toLowerCase());
 
             for (let i = 0; i < tagList.length; ++i) {
-
-                // remove weird characters from tags
                 const tag = tagList[i]
                     .trim()
                     .toLowerCase()
-                    .replace(/-/g, '_')          // replace hyphen for underscore
-                    .replace(/[^a-z0-9_ ]/g, '') // only allow alphanum and underscore and space (no unicode or other weird chars)
-                    .replace(/_+/g, '_')         // merge multiple underscores into a single underscore
-                    .replace(/^_+|_+$/g, '');    // remove pre-hang and post-hang underscores
+                    .replace(/-/g, '_')
+                    .replace(/[^a-z0-9_ ]/g, '')
+                    .replace(/_+/g, '_')
+                    .replace(/^_+|_+$/g, '');
 
-                // only write non-empty strings
                 if (tag.length > 0) {
-                    // creates array of strings from a comma-separated string
                     if (tag && !filterTags.includes(tag)) {
                         filterTags = [...filterTags, tag];
                     }
@@ -68,27 +64,27 @@
             }
 
             console.log(`User Entered Tags -> ${JSON.stringify(filterTags)}`);
+            tagInput = "";
             await populate();
-            filterTags = [];
         }
     }
 
     let pageIndex = $state<number>(0);
     const PAGE_SIZE = 20;
 
-    let totalFilteredCount = $state(0); // track full result count, not just the page slice
+    let totalFilteredCount = $state(0);
 
     let filteredMemes = $state([{mid:"", file_ext:"", tagString: "", likes: 0}]);
 
-    let showLikedOnly = false;
-    let showPopular = false;
+    let showLikedOnly = $state(false);
+    let showPopular = $state(false);
 
     let populating = false;
     async function populate(resetPage = true) {
         if (populating) return;
         populating = true;
 
-        if (resetPage) pageIndex = 0; // reset to page 1 whenever filters change
+        if (resetPage) pageIndex = 0;
 
         try {
             memeData = await FetchMemes();
@@ -125,7 +121,6 @@
 
             totalFilteredCount = result.length;
 
-            // clamp pageIndex in case filtering shrank the result set below current page
             const maxPageIndex = Math.max(0, Math.ceil(totalFilteredCount / PAGE_SIZE) - 1);
             if (pageIndex > maxPageIndex) pageIndex = maxPageIndex;
 
@@ -134,14 +129,14 @@
         } catch (err) {
             console.error(err);
         } finally {
-            populating = false; // you were missing this reset too!
+            populating = false;
         }
     }
 
     function goPrev() {
         if (pageIndex > 0) {
             --pageIndex;
-            populate(false); // false = don't reset page, we're intentionally navigating
+            populate(false);
         }
     }
 
