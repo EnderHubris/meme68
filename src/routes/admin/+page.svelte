@@ -8,6 +8,19 @@
         loading: boolean
     } = { users: [], error: "", loading: false };
 
+    async function updateMemeOfTheDay() {
+        const r = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/admin/force_update_motd`, {
+            credentials: "include"
+        });
+
+        const d = await r.json();
+        if (d && d.success) {
+            alert("MOTD Updated!");
+        } else {
+            alert("Failed to Update MOTD!");
+        }
+    }
+
     async function FetchUsers() {
         let users: any[] = [];
         let error = "";
@@ -116,6 +129,11 @@
       <a href="/admin/manage" class="btn btn-secondary btn-lg w-100 shadow">
         Manage Admins
       </a>
+    </div>
+    <div class="col-6">
+      <button onclick={ updateMemeOfTheDay } class="btn btn-secondary btn-lg w-100 shadow">
+        Update Meme of the Day
+      </button>
     </div>
   </div>
 </div><hr>

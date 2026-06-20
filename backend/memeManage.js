@@ -352,7 +352,7 @@ export async function DislikeMeme(sessid, mid) {
     }
 }
 
-export async function UpdateMemeOfTheDay() {
+export async function UpdateMemeOfTheDay(force_update) {
     const updateEntry = async () => {
         // get all meme entries
         const rows = await query("SELECT mid FROM memes")
@@ -398,7 +398,7 @@ export async function UpdateMemeOfTheDay() {
         const diffMs = now.getTime() - selected.getTime();  // difference in milliseconds
         const diffHours = diffMs / (1000 * 60 * 60);        // convert to hours
 
-        if (diffHours >= 24) {
+        if (force_update || diffHours >= 24) {
             await updateEntry();
         }
     }
