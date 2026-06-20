@@ -18,6 +18,7 @@ fi
 
 # ensure certbot challenge directory is present and modifiable by www-data
 mkdir -p /var/www/certbot/.well-known/acme-challenge
+chown -R www-data:www-data /var/www/
 chown -R www-data:www-data /var/www/certbot
 
 # Keep container alive
