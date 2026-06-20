@@ -21,7 +21,7 @@ import multer from "multer";
 import { fileTypeFromFile } from "file-type";
 import fs from "fs";
 import path from "path";
-export const UPLOAD_DIR = "uploads/";
+export const UPLOAD_DIR = process.env.UPLOAD_DIR | "uploads/";
 
 // try to mitigate from sending response data back to sketchy places
 const allowedOrigins = [
@@ -149,7 +149,6 @@ app.post('/login', async (req, res) => {
         const data = req.body; // JSON {name, password}
         const IP = req.ip;
 
-        console.log(`LOGIN -> ${JSON.stringify(data)}`);
         if (!data || !IP)
             return res.json({message:"Failed to Login", success: false});
 
