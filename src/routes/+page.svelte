@@ -63,8 +63,6 @@
                 }
             }
 
-            console.log(`User Entered Tags -> ${JSON.stringify(filterTags)}`);
-            tagInput = "";
             await populate();
         }
     }
