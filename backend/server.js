@@ -21,7 +21,7 @@ import multer from "multer";
 import { fileTypeFromFile } from "file-type";
 import fs from "fs";
 import path from "path";
-export const UPLOAD_DIR = "uploads/";
+export const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "uploads/";
 
 // try to mitigate from sending response data back to sketchy places
 const allowedOrigins = [
@@ -29,8 +29,8 @@ const allowedOrigins = [
     `http://localhost:8080`,
     `http://localhost:5173`,
     `https://localhost:443`,
-    process.env.DEV_HOST | "",
-    process.env.DEV_BACK_HOST | "",
+    process.env.DEV_HOST ?? "",
+    process.env.DEV_BACK_HOST ?? "",
 ];
 
 console.log(`Allowed Origins\n|____ ${allowedOrigins}\n`);
@@ -149,7 +149,6 @@ app.post('/login', async (req, res) => {
         const data = req.body; // JSON {name, password}
         const IP = req.ip;
 
-        console.log(`LOGIN -> ${JSON.stringify(data)}`);
         if (!data || !IP)
             return res.json({message:"Failed to Login", success: false});
 
@@ -463,6 +462,51 @@ app.post('/admin/edit_meme', async (req, res) => {
     }
 });
 
+app.get('/admin/force_update_motd', async (req, res) => {
+    try {
+        const sessid = req.cookies.sessid;
+        const IP = req.ip;
+        if (sessid) {
+            const valid = await VerifySession(sessid,IP);
+            let is_admin = false;
+            
+            if (valid) {
+                is_admin = await IsAdmin(sessid, IP);
+            }
+
+            if (is_admin) {
+                console.log("[*] Admin Forcibly Updating MOTD");
+
+                const motd_old = await GetMemeOfTheDay();
+                await UpdateMemeOfTheDay(true);
+                const motd_new = await GetMemeOfTheDay();
+
+                console.log(`[*] MOTD: ${motd_old.mid} -> ${motd_new.mid}`);
+
+                const h = motd_old.mid !== motd_new.mid;
+
+                return res.json({
+                    message: h ? "Successfully Updated MOTD" : "Failed to Update MOTD",
+                    success: h
+                });
+            } else {
+                return res.json({
+                    message: "Failed to Update MOTD",
+                    success: false
+                });
+            }
+        }
+
+        return res.json({
+            message: "Failed to Update MOTD",
+            success: false
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("An unexpected error occurred.");
+    }
+});
+
 app.post('/like_meme', async (req, res) => {
     try {
         const data = req.body;
@@ -582,7 +626,7 @@ app.get('/meme_of_the_day', async (req, res) => {
         // update meme of the day if the entry is
         // potentially corrupted
         if (data.mid.length === 0) {
-            await UpdateMemeOfTheDay();
+            await UpdateMemeOfTheDay(false);
             data = await GetMemeOfTheDay();
         }
 
@@ -725,7 +769,7 @@ async function UpdateDB() {
     if (checking) return;
     checking = true;
     
-    await UpdateMemeOfTheDay();
+    await UpdateMemeOfTheDay(true);
 
     checking = false;
 }

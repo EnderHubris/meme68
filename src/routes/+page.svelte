@@ -26,18 +26,18 @@
         memes: any[],
         error: string,
         loading: boolean
-    } = { memes: [], error: "", loading: false };
+    } = $state({ memes: [], error: "", loading: false });
 
     let likedMemeData: {
         liked_memes: any[],
         error: string,
         loading: boolean
-    } = { liked_memes: [], error: "", loading: false };
+    } = $state({ liked_memes: [], error: "", loading: false });
 
-    let filterTags: string[] = [];
-    let tagInput = "";
-    let createdAfter = "";   // yyyy-mm-dd format
-    let createdBefore = "";
+    let filterTags: string[] = $state([]);
+    let tagInput = $state("");
+    let createdAfter = $state("");   // yyyy-mm-dd format
+    let createdBefore = $state("");
 
     async function handleTagKey(e: KeyboardEvent) {
         if (e.key === "Enter") {
@@ -48,62 +48,63 @@
                 .map(t => t.trim().toLowerCase());
 
             for (let i = 0; i < tagList.length; ++i) {
-
-                // remove weird characters from tags
                 const tag = tagList[i]
                     .trim()
                     .toLowerCase()
-                    .replace(/-/g, '_')          // replace hyphen for underscore
-                    .replace(/[^a-z0-9_ ]/g, '') // only allow alphanum and underscore and space (no unicode or other weird chars)
-                    .replace(/_+/g, '_')         // merge multiple underscores into a single underscore
-                    .replace(/^_+|_+$/g, '');    // remove pre-hang and post-hang underscores
+                    .replace(/-/g, '_')
+                    .replace(/[^a-z0-9_ ]/g, '')
+                    .replace(/_+/g, '_')
+                    .replace(/^_+|_+$/g, '');
 
-                // only write non-empty strings
                 if (tag.length > 0) {
-                    // creates array of strings from a comma-separated string
                     if (tag && !filterTags.includes(tag)) {
                         filterTags = [...filterTags, tag];
                     }
                 }
             }
 
-            console.log(`User Entered Tags -> ${JSON.stringify(filterTags)}`);
             await populate();
-            filterTags = [];
         }
     }
 
+    let pageIndex = $state<number>(0);
+    const PAGE_SIZE = 20;
+
+    let totalFilteredCount = $state(0);
+
     let filteredMemes = $state([{mid:"", file_ext:"", tagString: "", likes: 0}]);
 
-    let showLikedOnly = false;
-    let showPopular = false;
-    
+    let showLikedOnly = $state(false);
+    let showPopular = $state(false);
+
     let populating = false;
-    async function populate() {
+    async function populate(resetPage = true) {
         if (populating) return;
         populating = true;
+
+        if (resetPage) pageIndex = 0;
 
         try {
             memeData = await FetchMemes();
             likedMemeData = await FetchLikedMemes();
 
-            filteredMemes = memeData.memes.filter(meme => {
+            let result = memeData.memes.filter(meme => {
                 if (!showPopular) {
                     if (showLikedOnly) {
                         return likedMemeData.liked_memes.includes(meme.mid);
                     }
-    
+
                     // TAG FILTER
                     if (filterTags.length > 0) {
                         const memeTags = meme.tagString
                             ?.split(',')
                             .map(t => t.trim().toLowerCase());
-    
+
                         if (!filterTags.every(tag => memeTags?.includes(tag))) {
                             return false;
                         }
                     }
-    
+
                     // DATE FILTER
                     const created = new Date(meme.created_at);
                     if (createdAfter && created < new Date(createdAfter)) return false;
@@ -113,14 +114,36 @@
             });
 
             if (showPopular) {
-                // sort by likes in descending order
-                filteredMemes.sort((a, b) => b.likes - a.likes);
+                result.sort((a, b) => b.likes - a.likes);
             }
+
+            totalFilteredCount = result.length;
+
+            const maxPageIndex = Math.max(0, Math.ceil(totalFilteredCount / PAGE_SIZE) - 1);
+            if (pageIndex > maxPageIndex) pageIndex = maxPageIndex;
+
+            const start = pageIndex * PAGE_SIZE;
+            filteredMemes = result.slice(start, start + PAGE_SIZE);
         } catch (err) {
             console.error(err);
+        } finally {
+            populating = false;
         }
+    }
 
-        populating = false;
+    function goPrev() {
+        if (pageIndex > 0) {
+            --pageIndex;
+            populate(false);
+        }
+    }
+
+    function goNext() {
+        const maxPageIndex = Math.max(0, Math.ceil(totalFilteredCount / PAGE_SIZE) - 1);
+        if (pageIndex < maxPageIndex) {
+            ++pageIndex;
+            populate(false);
+        }
     }
 
     onMount(populate);
@@ -140,7 +163,7 @@
           class="border-0 flex-grow-1"
           placeholder="Add tag"
           bind:value={tagInput}
-          on:keydown={handleTagKey}
+          onkeydown={handleTagKey}
         >
       </div>
     </div>
@@ -167,7 +190,7 @@
                     type="date"
                     class="form-control form-control-sm"
                     bind:value={createdAfter}
-                    on:change={populate}
+                    onchange={populate}
                     >
                 </div>
 
@@ -177,7 +200,7 @@
                     type="date"
                     class="form-control form-control-sm"
                     bind:value={createdBefore}
-                    on:change={populate}
+                    onchange={populate}
                     >
                 </div>
             </div>
@@ -190,7 +213,7 @@
                 type="checkbox"
                 id="likedToggle"
                 bind:checked={showLikedOnly}
-                on:change={() => {
+                onchange={() => {
                     populate();
 
                     if (showPopular) {
@@ -207,7 +230,7 @@
                 type="checkbox"
                 id="popularToggle"
                 bind:checked={showPopular}
-                on:change={() => {
+                onchange={() => {
                     populate();
 
                     if (showLikedOnly) {
@@ -236,53 +259,72 @@
       {:else}
         {#each filteredMemes as meme}
             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="card h-100 p-3 shadow-sm d-flex flex-column">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <strong class="mb-0">Likes: {meme.likes}</strong>
+                <div class="card h-100 p-3 shadow-sm d-flex flex-column">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <strong class="mb-0">Likes: {meme.likes}</strong>
 
-                    <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" on:click={(event) => ShareMeme(event, meme.mid)}>
-                        <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        class="bi bi-share"
-                        viewBox="0 0 16 16"
+                        <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" onclick={(event) => ShareMeme(event, meme.mid)}>
+                            <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-share"
+                            viewBox="0 0 16 16"
+                            >
+                            <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+                            </svg>
+                            Share
+                        </button>
+                    </div>
+
+                    <img
+                    src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}${meme.file_ext}`}
+                    alt="meme image"
+                    class="meme-img img-fluid rounded border mb-2"
+                    onclick={(event) => ViewMore(event, meme.mid)}
+                    />
+
+                    <!-- Push button to bottom -->
+                    <div class="mt-auto">
+                    {#if !likedMemeData.liked_memes.includes(meme.mid)}
+                        <button
+                        class="btn btn-primary btn-sm w-100"
+                        onclick={(event) => PressedLike(event, meme.mid)}
                         >
-                        <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
-                        </svg>
-                        Share
-                    </button>
+                        Like
+                        </button>
+                    {:else}
+                        <button
+                        class="btn btn-danger btn-sm w-100"
+                        onclick={(event) => PressedDislike(event, meme.mid)}
+                        >
+                        Dislike
+                        </button>
+                    {/if}
+                    </div>
                 </div>
-
-                <img
-                src={`${import.meta.env.VITE_BACKEND_ROOT}/uploads/${meme.mid}${meme.file_ext}`}
-                alt="meme image"
-                class="meme-img img-fluid rounded border mb-2"
-                on:click={(event) => ViewMore(event, meme.mid)}
-                />
-
-                <!-- Push button to bottom -->
-                <div class="mt-auto">
-                {#if !likedMemeData.liked_memes.includes(meme.mid)}
-                    <button
-                    class="btn btn-primary btn-sm w-100"
-                    on:click={(event) => PressedLike(event, meme.mid)}
-                    >
-                    Like
-                    </button>
-                {:else}
-                    <button
-                    class="btn btn-danger btn-sm w-100"
-                    on:click={(event) => PressedDislike(event, meme.mid)}
-                    >
-                    Dislike
-                    </button>
-                {/if}
-                </div>
-            </div>
             </div>
         {/each}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 16px">
+            <button
+                class="btn btn-secondary"
+                style="width: 150px"
+                disabled={pageIndex === 0}
+                onclick={goPrev}
+            >Prev</button>
+
+            <span class="text-muted">
+                Page {pageIndex + 1} of {Math.max(1, Math.ceil(totalFilteredCount / PAGE_SIZE))}
+            </span>
+
+            <button
+                class="btn btn-secondary"
+                style="width: 150px"
+                disabled={pageIndex >= Math.ceil(totalFilteredCount / PAGE_SIZE) - 1}
+                onclick={goNext}
+            >Next</button>
+        </div>
       {/if}
     </div>
   {/if}

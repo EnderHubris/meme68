@@ -103,7 +103,7 @@
 </div><hr>
 
 <div class="d-flex justify-content-center align-items-center" style="padding: 25px;">
-  <form id="dataForm" class="p-4 shadow rounded" style="width: 100%; max-width: 400px;" on:submit={createAdmin}>
+  <form id="dataForm" class="p-4 shadow rounded" style="width: 100%; max-width: 400px;" onsubmit={createAdmin}>
     <h2 class="mb-4 text-center">Create Admin</h2>
 
     <div class="mb-3">
@@ -162,7 +162,7 @@
                         <strong>{admin.username}</strong>
                         <div class="text-muted small mb-2">{admin.email}</div>
                         <button class="btn btn-danger w-100"
-                            on:click={(event) => removeAdmin(event, admin.username)}>
+                            onclick={ (event) => removeAdmin(event, admin.username) }>
                             Remove
                         </button>
                     </div>

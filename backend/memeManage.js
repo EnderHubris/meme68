@@ -6,6 +6,14 @@ import { query } from './db.js';
 import { UPLOAD_DIR } from './server.js';
 import { randomInt } from "crypto";
 
+class FileDelErr extends Error {
+    constructor(message, field) {
+        super(message);
+        this.name = "File Del Error";
+        this.field = field; // Custom property
+    }
+}
+
 /**
  * Simple meme data fetching function
  * 
@@ -92,19 +100,44 @@ export async function DeleteMeme(fileName) {
             return false;
         }
 
-        const filePath = UPLOAD_DIR + fileName;
-        fs.unlink(filePath, (err) => {
-            if (err) console.error("Failed to delete file:", err);
-            else console.log("File deleted:", filePath);
-        })
+        // attempt to remove file from disk
+        try {
+            const data = await query(
+                "SELECT file_ext FROM memes WHERE mid = ? LIMIT 1",
+                [fileName]
+            );
 
-        // remove meme entry
+            // check path before deleting
+            if (!/^[a-zA-Z0-9._-]+$/.test(fileName)) {
+                throw new FileDelErr("Invalid File Name!");
+            }
+
+            const filePath = path.resolve(UPLOAD_DIR, fileName + data[0].file_ext);
+            const uploadsDir = path.resolve(UPLOAD_DIR);
+
+            console.log("[*] Attempting to Remove:", filePath);
+
+            if (!filePath.startsWith(uploadsDir)) {
+                throw new FileDelErr("Invalid Path!");
+            }
+            if (!fs.existsSync(filePath)) {
+                throw new FileDelErr("File does not exist!");
+            }
+            fs.unlink(filePath, (err) => {
+                if (err) console.error("Failed to delete file:", err);
+                else console.log("File deleted:", filePath);
+            })
+        } catch (e) {
+            console.error("[DELETE_MEME]", e);
+        }
+
+        // remove meme entry from DB
         const result = await query(
             "DELETE FROM memes WHERE mid = ?",
             [fileName]
         );
 
-        // remove entry from all users who liked the meme
+        // remove entry from all users who liked the meme in DB
         const mid = fileName;
         const pushUpdate = await query(
             `
@@ -319,7 +352,7 @@ export async function DislikeMeme(sessid, mid) {
     }
 }
 
-export async function UpdateMemeOfTheDay() {
+export async function UpdateMemeOfTheDay(force_update) {
     const updateEntry = async () => {
         // get all meme entries
         const rows = await query("SELECT mid FROM memes")
@@ -365,7 +398,7 @@ export async function UpdateMemeOfTheDay() {
         const diffMs = now.getTime() - selected.getTime();  // difference in milliseconds
         const diffHours = diffMs / (1000 * 60 * 60);        // convert to hours
 
-        if (diffHours >= 24) {
+        if (force_update || diffHours >= 24) {
             await updateEntry();
         }
     }

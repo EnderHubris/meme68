@@ -89,12 +89,12 @@
 
                 {#if !likedMemeData.liked_memes.includes(memeInfo.mid)}
                     <button class="btn btn-primary w-100"
-                    on:click={(event) => PressedLike(event, memeInfo.mid)}>
+                    onclick={(event) => PressedLike(event, memeInfo.mid)}>
                     Like
                     </button>
                 {:else}
                     <button class="btn btn-danger w-100"
-                    on:click={(event) => PressedDislike(event, memeInfo.mid)}>
+                    onclick={(event) => PressedDislike(event, memeInfo.mid)}>
                     Dislike
                     </button>
                 {/if}
