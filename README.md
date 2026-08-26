@@ -1,24 +1,21 @@
 # meme68
-Website repo for the meme68 website
+Website repo for the [meme68](https://meme68.com) website
 
 ## What is this?
 Simple fun website to host a collection of goofy images for college students to enjoy.
 
 ## :computer: Development Installation
 ### :hammer: Install Dependencies
-You will need to install the latest `npm` and `nodejs` binaries, along with docker and the compose plugin.
+This project was built using SvelteKit, MySQL, bun, and Docker. It is recommended before developing that you have installed:
+- nodejs
+- npm
+- bun
+- docker (and the compose plugin)
 
 ### :wrench: Build
-```bash
-# installs dependencies/packages tracked by this project
-npm install .
-# compile and run the frontend locally
-npm run dev
-```
-
-Move the web related `.env` file into the project root directory, then run the following to run the backend locally.
-```bash
-nodejs backend/server.js
+```console
+bun install
+bun run dev -- --open
 ```
 
 ## :chart_with_upwards_trend: Production
@@ -32,8 +29,11 @@ You will need to move the `.env` into the project root folder before running the
 ### How to use docker compose on latest Ubuntu installs:
 - Follow install instructions from [Install Documentation](https://docs.docker.com/engine/install/ubuntu/)
 
-Prepare and run Docker container
-```bash
-# create docker project called meme68
-sudo docker compose --env-file .env -p meme68 up --build -d
+Prepare and run Docker container locally
+```console
+# remove volumes
+docker compose down -v
+
+# build/rebuild compose
+docker compose up -d --build
 ```

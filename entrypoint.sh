@@ -1,7 +1,13 @@
 #!/bin/bash
 set -e
 
+# prep extern dirs
+echo "[*] Preparing www-data directories..."
+mkdir -p /app/build && chown -R www-data:www-data "/app/build"
+mkdir -p "${UPLOADS_DIR}" && chown -R www-data:www-data "${UPLOADS_DIR}"
+
 # Start supervisord in the background
+echo "[*] Starting supervisord..."
 /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf &
 
 # Wait until supervisor socket exists
@@ -10,15 +16,9 @@ while [ ! -S /var/run/supervisor.sock ]; do
     sleep 0.1
 done
 
-# Reload nginx if certs exist
-if [ -f /etc/letsencrypt/live/meme68.com/fullchain.pem ] && [ -f /etc/letsencrypt/live/meme68.com/privkey.pem ]; then
-    echo "Reloading NGINX with LetsEncrypt certs..."
-    supervisorctl restart nginx
-fi
-
-# ensure certbot challenge directory is present and modifiable by www-data
-mkdir -p /var/www/certbot/.well-known/acme-challenge
-chown -R www-data:www-data /var/www/certbot
+# reload config
+echo "[*] Reloading NGINX..."
+nginx -s reload
 
 # Keep container alive
 wait

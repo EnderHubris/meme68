@@ -1,10 +1,9 @@
 services:
-  db:
+  mysqldb:
     image: mysql:latest
-    container_name: meme68_db
     expose: # do not open port(s) on HOST
       - "3306"
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
@@ -20,39 +19,48 @@ services:
     networks:
       - app_internal
 
-  certbot:
-    image: certbot/certbot
-    container_name: meme68_certbot
-    restart: unless-stopped
-    volumes:
-      - certs:/etc/letsencrypt
-      - ../webroot:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; done;'"
+  migrate:
+    build:
+      context: .
+      dockerfile: ./migrate/Dockerfile
+    restart: "no"
+    environment:
+      DB_HOST: mysqldb
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      DBA_PASS: ${DB_ROOT_PASSWORD}
+    networks:
+      - app_internal
+    depends_on:
+      mysqldb:
+        condition: service_healthy
 
   app:
-    container_name: meme68_web
-    ports: # open port(s) on HOST
-      - "80:80"
-      - "443:443"
     restart: unless-stopped
+    environment:
+      PROD: ${PROD}
+      ORIGIN: ${ORIGIN}
+      SALT: ${SALT}
+      DB_HOST: mysqldb
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - uploads:/var/www/project/uploads
-      - certs:/etc/letsencrypt # allow nginx to view the SSL certs
-      - ../webroot:/var/www/certbot # allow for certbot challenge
+      - uploads:${UPLOADS_DIR}
     depends_on:
-      db:
+      mysqldb:
         condition: service_healthy
-      certbot:
-        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     networks:
       - app_internal
 
 volumes:
   db_data:
-  certs:
   uploads:
 
 networks:

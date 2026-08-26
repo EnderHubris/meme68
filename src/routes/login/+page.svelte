@@ -1,50 +1,58 @@
 <!-- typescript logic for the page to use -->
 <script lang="ts">
-    import { NotifyFeedback } from "$lib/feedback";
-
-    // variables can be referenced in HTML elements after the script-end tag
-    let name = "";
-    let password = "";
-
-    const handleLogin = async (event: Event) => {
-        event.preventDefault();
-
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: name,
-                password: password
-            }),
-            credentials: 'include'  // ensures cookies are sent
-        });
-
-        const data = await response.json();
-
-        if (data && data.message) {
-            NotifyFeedback(data.message);
-        }
-
-        if (data && data.success) {
-            window.location.href = '/';
-        }
-    };
+    import { enhance } from "$app/forms";
+    import { invalidateAll } from '$app/navigation';
+    
+    import { parseResult } from "$lib/browser_utils";
+    
+    let username = $state<string>("");
+    let password = $state<string>("");
+                
+    import Feedback from '$lib/components/feedback.svelte';
+    let error = $state("");
+    let warning = $state("");
+    let success = $state("");
+    function clearResult() {
+        error = warning = success = "";
+    }
 </script>
 
 <div class="d-flex justify-content-center align-items-center">
-  <form id="dataForm" class="p-4 shadow rounded" style="width: 100%; max-width: 400px;" onsubmit={handleLogin}>
+  <form
+    id="dataForm"
+    class="p-4 shadow rounded"
+    style="width: 100%; max-width: 400px;"
+    method="POST"
+    action="?/login"
+    use:enhance={ () => {
+        return async ({ result, update }) => {
+            await update();
+            const data = await parseResult(result);
+
+            success = data.success;
+            warning = data.warning;
+            error = data.error;
+
+            if (result.type === 'success' && result.data) {
+                await invalidateAll();
+                setTimeout(clearResult, 5000);
+            }
+        };
+    }}
+  >
     <h2 class="mb-4 text-center">Login</h2>
 
+    <Feedback {success} {warning} {error} />
+
     <div class="mb-3">
-      <label for="name" class="form-label">Username</label>
+      <label for="username" class="form-label">Username</label>
       <input
         type="username"
         class="form-control"
-        id="name"
-        bind:value={name}
-        placeholder="Enter Username or Email"
+        id="username"
+        name="username"
+        bind:value={username}
+        placeholder="Enter Username"
         required
       />
     </div>
@@ -55,16 +63,17 @@
         type="password"
         class="form-control"
         id="password"
+        name="password"
         bind:value={password}
         placeholder="Password"
         required
       />
     </div>
 
-    <button type="submit" class="btn btn-primary w-100">Login</button>
+    <button type="submit" class="btn btn-primary w-100">Login In</button>
 
     <div class="mt-3 text-center">
-      <a href="/register">Don't have an account? Sign up</a>
+      <a href="/register">Don't have an account? Sign Up!</a>
     </div>
   </form>
 </div>

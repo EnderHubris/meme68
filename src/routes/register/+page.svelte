@@ -1,43 +1,49 @@
 <!-- typescript logic for the page to use -->
 <script lang="ts">
-    import { NotifyFeedback } from "$lib/feedback";
+    import { enhance } from "$app/forms";
+    import { invalidateAll } from '$app/navigation';
     
-    // variables can be referenced in HTML elements after the script-end tag
-    let username = "";
-    let email = "";
-    let password = "";
-
-    const handleRegister = async (event: Event) => {
-        event.preventDefault();
-
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_ROOT}/register`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username: username,
-                email: email,
-                password: password
-            }),
-            credentials: 'include'  // ensures cookies are sent
-        });
-
-        const data = await response.json();
-
-        if (data && data.message) {
-            NotifyFeedback(data.message);
-        }
-
-        if (data && data.success) {
-            window.location.href = '/login';
-        }
-    };
+    import { parseResult } from "$lib/browser_utils";
+    
+    let username = $state<string>("");
+    let email = $state<string>("");
+    let password = $state<string>("");
+                
+    import Feedback from '$lib/components/feedback.svelte';
+    let error = $state("");
+    let warning = $state("");
+    let success = $state("");
+    function clearResult() {
+        error = warning = success = "";
+    }
 </script>
 
 <div class="d-flex justify-content-center align-items-center">
-  <form id="dataForm" class="p-4 shadow rounded" style="width: 100%; max-width: 400px;" onsubmit={handleRegister}>
+  <form
+    id="dataForm"
+    class="p-4 shadow rounded"
+    style="width: 100%; max-width: 400px;"
+    method="POST"
+    action="?/register"
+    use:enhance={ () => {
+        return async ({ result, update }) => {
+            await update();
+            const data = await parseResult(result);
+
+            success = data.success;
+            warning = data.warning;
+            error = data.error;
+
+            if (result.type === 'success' && result.data) {
+                await invalidateAll();
+                setTimeout(clearResult, 5000);
+            }
+        };
+    }}
+  >
     <h2 class="mb-4 text-center">Register</h2>
+
+    <Feedback {success} {warning} {error} />
 
     <div class="mb-3">
       <label for="username" class="form-label">Username</label>
@@ -45,6 +51,7 @@
         type="username"
         class="form-control"
         id="username"
+        name="username"
         bind:value={username}
         placeholder="Enter Username"
         required
@@ -57,6 +64,7 @@
         type="email"
         class="form-control"
         id="email"
+        name="email"
         bind:value={email}
         placeholder="Enter Email"
         required
@@ -69,6 +77,7 @@
         type="password"
         class="form-control"
         id="password"
+        name="password"
         bind:value={password}
         placeholder="Password"
         required

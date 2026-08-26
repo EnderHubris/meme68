@@ -1,53 +1,36 @@
+# Builder reference
+FROM oven/bun:1 AS build
+
+WORKDIR /app
+COPY drizzle/ ./drizzle
+COPY src/ ./src
+COPY static/ ./static
+COPY drizzle.config.ts bun.lock package.json svelte.config.js tsconfig.json vite.config.ts .
+
+RUN bun install --frozen-lockfile && bun run build
+
+# Build the main application container
 FROM nginx:latest
-WORKDIR /
-RUN apt-get update && apt-get install -y supervisor sudo nodejs npm net-tools
 
-# initial file system preperation
-RUN mkdir -p /var/www/meme68
-RUN mkdir -p /var/www/project/uploads
-# create challenge directory before starting certbot
-RUN mkdir -p /var/www/certbot/.well-known/acme-challenge
+RUN apt-get update && apt-get install -y \
+supervisor \
+net-tools \
+gettext-base && rm -rf /var/lib/apt/lists/*
 
-# ensure www-data can read/write to the volume endpoint
-RUN chown -R www-data:www-data /var/www/project/
+COPY --from=build /usr/local/bin/bun /usr/local/bin/bun
 
-RUN chsh -s /bin/bash www-data
+RUN mkdir -p /app
 
-# move svelte folders into project area
-COPY src/ /var/www/project/src
-COPY static/ /var/www/project/static
-COPY package.json package-lock.json /var/www/project/
-COPY .env /var/www/meme68/
-RUN ln -s /var/www/meme68/.env /var/www/project/.env
-COPY svelte.config.js tsconfig.json vite.config.ts build_svelte.sh /var/www/project/
+COPY meme68.conf /etc/nginx/meme68.conf
 
-# move backend files
-COPY backend /var/www/project/backend
-
-# prep build handler and build NGINX production files
-RUN chown -R www-data:www-data /var/www
-# allow www-data group members to manipulate web-files
-RUN chmod -R 775 /var/www
-RUN chmod +x /var/www/project/build_svelte.sh
-RUN su www-data -c 'bash /var/www/project/build_svelte.sh'
-
-# configure NGINX
-RUN rm /etc/nginx/conf.d/default.conf
-COPY meme68.conf /etc/nginx/conf.d/meme68.conf
-# give NGINX a dummy cert so it can start up
-RUN mkdir -p /etc/letsencrypt/live/meme68.com && \
-    openssl req -x509 -nodes -days 365 \
-        -newkey rsa:2048 \
-        -keyout /etc/letsencrypt/live/meme68.com/privkey.pem \
-        -out /etc/letsencrypt/live/meme68.com/fullchain.pem \
-        -subj "/CN=meme68.com Dummy Certificate/O=Cert Initializing"
-
-EXPOSE 80 443
+WORKDIR /app
+COPY --from=build /app/build ./build
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # prep entry script and execute it
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
-
 CMD ["/root/entrypoint.sh"]
