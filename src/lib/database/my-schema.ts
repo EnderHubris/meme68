@@ -50,6 +50,6 @@ export const sessions = mysqlTable("sessions", {
     uid: varchar("uid", { length: 36 })
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    expiresAt: timestamp("expires_at").default(sql`(now() + interval 3 week)`).notNull(),
+    createdAt: timestamp("created_at").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
 });

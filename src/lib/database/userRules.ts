@@ -3,7 +3,19 @@ import {
     eq, and, or
 } from "drizzle-orm";
 import * as schema from "./my-schema";
-import { GenerateSID, Hash_SHA256 } from "$lib/server_utils";
+import { cookieLifeTime, GenerateSID, Hash_SHA256, IsExpired } from "$lib/server_utils";
+
+export async function FindSID(sid: string) {
+    try {
+        const [session] = await db.select()
+            .from(schema.sessions)
+            .where(eq(schema.sessions.sid, sid));
+        return session;
+    } catch (e: any) {
+        console.error("[-] FindSID:", e);
+        return false;
+    }
+}
 
 export async function GetUserByID(id: string) {
     try {
@@ -22,12 +34,17 @@ export async function GetUserByID(id: string) {
 }
 export async function GetUserBySession(sessid: string) {
     try {
+        console.log(`[*] Finding User by sessid: ${sessid}`);
+
         const [session] = await db.select().from(schema.sessions)
             .where(eq(schema.sessions.sid, sessid));
-        if (!session) return null;
-        if (new Date().getTime() >= session.expiresAt.getTime()) {
+        if (!session) {
+            console.log("[-] User not found!");
+            return null;
+        }
+
+        if (await IsExpired(session)) {
             console.log("[*] Discovered Expired Session:", sessid);
-            await DeleteSession(sessid);
             return null;
         }
 
@@ -38,6 +55,9 @@ export async function GetUserBySession(sessid: string) {
             isAdmin: schema.users.admin,
             likedMemes: schema.users.likedMemes
         }).from(schema.users).where(eq(schema.users.id, session.uid));
+        
+        console.log(`[*] User Found: ${user.username}`);
+
         return user;
     } catch (e: any) {
         console.error(e);
@@ -86,11 +106,18 @@ export async function CreateSession(IP: string, id: string) {
     try {
         console.log("[*] Attempting to create new user session...");
         const sessid = GenerateSID(IP);
+
+        const created_at = new Date();
+        const expires_at = new Date(created_at.getTime() + cookieLifeTime * 1000);
+
+        console.log(` |___ ${created_at.getTime()} >= ${expires_at.getTime()}`);
     
         // link sessid to user id
         await db.insert(schema.sessions).values({
             sid: sessid,
-            uid: id
+            uid: id,
+            createdAt: created_at,
+            expiresAt: expires_at
         });
 
         console.log("[*] Session Created:", sessid);

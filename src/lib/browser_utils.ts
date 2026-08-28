@@ -2,7 +2,7 @@
  * @description This file contains methods used on the front-end (.svelte)
  */
 
-import type { ActionResult } from "@sveltejs/kit";
+import type { ActionResult, Cookies } from "@sveltejs/kit";
 
 /**
  * Take an Action's result and parse it into a simplified object
@@ -35,4 +35,8 @@ export async function parseResult(result: ActionResult<Record<string, unknown> |
     }
 
     return {success, warning, error};
+}
+
+export async function RemoveCookie(cookies: Cookies) {
+    cookies.delete("sessid", { path: "/" });
 }

@@ -4,6 +4,11 @@
 
 import { env } from "$env/dynamic/private";
 import crypto from "crypto";
+import { DeleteSession, FindSID } from "./database/userRules";
+import { RemoveCookie } from "./browser_utils";
+import { redirect } from "@sveltejs/kit";
+
+export const cookieLifeTime = Number(env.COOKIE_LIFETIME ?? process.env.COOKIE_LIFETIME ?? (60 * 60 * 24 * 7));
 
 /**
  * Alias Function to generate SHA-256 Strings
@@ -17,17 +22,65 @@ export function Hash_SHA256(input: string) {
     return crypto.createHash("sha256").update(input).digest("hex");
 }
 
+export async function CheckCookies({ cookies, getClientAddress }) {
+    const sid = cookies.get("sessid");
+    if (!sid) return;
+    const IP = getClientAddress();
+
+    if (await CheckSID(sid, IP)) {
+        throw redirect(303, "/");
+    } else {
+        await RemoveCookie(cookies);
+    }
+}
+
 export function GenerateSID(IP: string) {
     const salt = env.SALT ?? process.env.SALT;
+    let s: string = "";
+    const base = "abcdefghijklmnopqrstuvwxyz1234567890";
 
-    // grab random indexs
-    const r = [0,0];
-    for (let i = 0; i < 2; ++i)
-        r[i] = Math.floor(Math.random() * salt.length-6) + 1;
-
-    // stuff IP in between two random substrs and hash it
-    let s = salt.slice(r[0], r[0]+6) + IP + salt.slice(r[1], r[1]+6);
+    for (let i = 0; i < salt.length; ++i) {
+        for (let k = 0; k < IP.length; ++k) {
+            const pos = (salt[i].charCodeAt(0) + IP[k].charCodeAt(0)) % base.length;
+            s += base[pos];
+        }
+    }
+    s += new Date().getTime().toString();
     
     // incase the hash string is too long ensure the string size fits
     return Hash_SHA256(s).slice(0, 35);
+}
+
+/**
+ * Checks a given session for expiration
+ * 
+ * @param session 
+ * @returns 
+ */
+export async function IsExpired(session: {
+    sid: string;
+    uid: string;
+    createdAt: Date;
+    expiresAt: Date;
+} | undefined | null) {
+    if (!session) return true;
+
+    if (Date.now() >= session.expiresAt.getTime()) {
+        console.log(`[*] Session: ${session.sid} was found as expired!`);
+        console.log(` |___ ${Date.now()} >= ${session.expiresAt.getTime()}`);
+        await DeleteSession(session.sid);
+        return true;
+    }
+    return false;
+}
+
+export async function CheckSID(sid: string, IP: string) {
+    try {
+        const session = await FindSID(sid);
+        if (!session) return false;
+        return await !IsExpired(session);
+    } catch (e: any) {
+        console.error("[-] CheckSID:", e);
+        return false;
+    }
 }

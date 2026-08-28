@@ -1,10 +1,10 @@
 import { env } from "$env/dynamic/private";
 import { LoginUser } from "$lib/database/userRules.js";
+import { CheckCookies, cookieLifeTime } from "$lib/server_utils";
 import { fail, redirect, isRedirect } from "@sveltejs/kit";
 
 export const load = async ({ cookies, getClientAddress }) => {
-    const sid = cookies.get("sessid");
-    const IP = getClientAddress();
+    await CheckCookies({ cookies, getClientAddress });
 };
 
 export const actions = {
@@ -24,7 +24,7 @@ export const actions = {
                 httpOnly: true,
                 secure: prodStatus ? Boolean(prodStatus) : false,
                 sameSite: 'strict',
-                maxAge: 60 * 60 * 24 * 7 // 1 week
+                maxAge: cookieLifeTime // defaults to 1 week
             });
             
             throw redirect(303, '/');

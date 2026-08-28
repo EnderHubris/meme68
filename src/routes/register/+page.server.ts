@@ -1,9 +1,9 @@
 import { AddUser } from "$lib/database/userRules.js";
+import { CheckCookies } from "$lib/server_utils.js";
 import { fail, isRedirect, redirect } from "@sveltejs/kit";
 
 export const load = async ({ cookies, getClientAddress }) => {
-    const sid = cookies.get("sessid");
-    const IP = getClientAddress();
+    await CheckCookies({ cookies, getClientAddress });
 };
 
 export const actions = {

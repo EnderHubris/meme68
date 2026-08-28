@@ -17,8 +17,8 @@ CREATE TABLE `memes` (
 CREATE TABLE `sessions` (
 	`sid` varchar(36) NOT NULL,
 	`uid` varchar(36) NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
-	`expires_at` timestamp NOT NULL DEFAULT (now() + interval 3 week),
+	`created_at` timestamp NOT NULL,
+	`expires_at` timestamp NOT NULL,
 	CONSTRAINT `sessions_sid` PRIMARY KEY(`sid`)
 );
 --> statement-breakpoint
