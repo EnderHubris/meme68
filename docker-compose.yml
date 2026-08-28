@@ -30,6 +30,9 @@ services:
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
       DBA_PASS: ${DB_ROOT_PASSWORD}
+      ADM_USER: ${DEFAULT_ADM}
+      ADM_EMAIL: ${DEFAULT_ADM_EMAIL}
+      ADM_PASS: ${DEFAULT_ADM_PASS}
     networks:
       - app_internal
     depends_on:

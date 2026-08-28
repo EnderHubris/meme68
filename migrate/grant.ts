@@ -1,4 +1,10 @@
 import mysql2 from "mysql2/promise";
+import crypto from "crypto";
+
+function Hash_SHA256(input: string) {
+    input = String(input);
+    return crypto.createHash("sha256").update(input).digest("hex");
+}
 
 const DB_HOST = process.env.DB_HOST;
 const DB_NAME = process.env.DB_NAME;
@@ -19,6 +25,19 @@ const connection = await mysql2.createConnection({
 });
 
 try {
+    // push default admin credential upon db init
+    await connection.query(
+        `INSERT IGNORE INTO users (username, email, password_hash, created_at, admin) 
+        VALUES (?, ?, ?, ?, ?)`,
+        [
+            process.env.ADM_USER,
+            process.env.ADM_EMAIL,
+            Hash_SHA256(process.env.ADM_PASS),
+            new Date(),
+            true
+        ]
+    );
+
     await connection.query(`
         GRANT SELECT, INSERT, UPDATE, DELETE ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%';
         FLUSH PRIVILEGES;

@@ -4,7 +4,9 @@ import { CheckCookies, cookieLifeTime } from "$lib/server_utils";
 import { fail, redirect, isRedirect } from "@sveltejs/kit";
 
 export const load = async ({ cookies, getClientAddress }) => {
-    await CheckCookies({ cookies, getClientAddress });
+    // if cookies are valid and present go back to home
+    if (await CheckCookies({ cookies, getClientAddress }))
+        throw redirect(303, "/");
 };
 
 export const actions = {

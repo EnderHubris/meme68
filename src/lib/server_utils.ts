@@ -4,11 +4,13 @@
 
 import { env } from "$env/dynamic/private";
 import crypto from "crypto";
-import { DeleteSession, FindSID } from "./database/userRules";
+import { DeleteSession, FindSID, GetUserBySession } from "./database/userRules";
 import { RemoveCookie } from "./browser_utils";
 import { redirect } from "@sveltejs/kit";
 
-export const cookieLifeTime = Number(env.COOKIE_LIFETIME ?? process.env.COOKIE_LIFETIME ?? (60 * 60 * 24 * 7));
+let ct = Number(env.COOKIE_LIFETIME ?? process.env.COOKIE_LIFETIME);
+export const cookieLifeTime = ct > 0 ? ct : 60 * 60 * 24 * 7;
+console.log("Cookie Life-Time:", cookieLifeTime);
 
 /**
  * Alias Function to generate SHA-256 Strings
@@ -24,14 +26,18 @@ export function Hash_SHA256(input: string) {
 
 export async function CheckCookies({ cookies, getClientAddress }) {
     const sid = cookies.get("sessid");
-    if (!sid) return;
+    if (!sid) return false;
+
     const IP = getClientAddress();
 
+    console.log("[*] Testing SID:", sid);
     if (await CheckSID(sid, IP)) {
-        throw redirect(303, "/");
-    } else {
-        await RemoveCookie(cookies);
+        return true;
     }
+
+    console.log("[*] Deleing SID:", sid);
+    await RemoveCookie(cookies);
+    return false;
 }
 
 export function GenerateSID(IP: string) {
@@ -65,12 +71,16 @@ export async function IsExpired(session: {
 } | undefined | null) {
     if (!session) return true;
 
+    console.log("[*] Checking Expiration...");
+
     if (Date.now() >= session.expiresAt.getTime()) {
         console.log(`[*] Session: ${session.sid} was found as expired!`);
         console.log(` |___ ${Date.now()} >= ${session.expiresAt.getTime()}`);
         await DeleteSession(session.sid);
         return true;
     }
+
+    console.log("[*] Session is not expired!");
     return false;
 }
 
@@ -78,9 +88,17 @@ export async function CheckSID(sid: string, IP: string) {
     try {
         const session = await FindSID(sid);
         if (!session) return false;
-        return await !IsExpired(session);
+        console.log("[*] Found Session during SID Check");
+        return !(await IsExpired(session));
     } catch (e: any) {
         console.error("[-] CheckSID:", e);
         return false;
     }
+}
+
+export async function IsAdmin(sid: string | undefined | null) {
+    if (!sid) return false;
+    const user = await GetUserBySession(sid);
+    if (!user) return false;
+    return user.isAdmin;
 }
