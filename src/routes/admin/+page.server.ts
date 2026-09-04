@@ -1,6 +1,6 @@
 import { GetAdmins, GetUsers } from "$lib/database/adminRules.js";
 import { UploadFile } from "$lib/database/fileUtilities.js";
-import { DeleteMeme, GetRecentMemes } from "$lib/database/memeRules";
+import { DeleteMeme, GetRecentMemes, UpdateMeme } from "$lib/database/memeRules";
 import { GetUserBySession } from "$lib/database/userRules.js";
 import { CheckCookies, IsAdmin } from "$lib/server_utils";
 import { type Actions, redirect, fail } from "@sveltejs/kit";
@@ -72,6 +72,29 @@ export const actions: Actions = {
 
             if (!mid) return { success: false, error: "Invalid Data!" }
             return await DeleteMeme(mid);
+        } catch (e: any) {
+            console.error("[-] Upload:", e);
+            return fail(500, { success: false, error: "An error occurred during upload" });
+        }
+	},
+    update_meme: async ({ request, cookies, getClientAddress }) => {
+		const formData = await request.formData();
+        const mid = formData.get("mid") as string;
+        const tagString = formData.get("tagString") as string;
+
+        const IP = getClientAddress();
+        const sid = cookies.get("sessid");
+        const uid = (await GetUserBySession(sid))?.id ?? "unknown";
+
+        try {
+            // auth. check
+            if (!sid || !await CheckCookies(cookies)) {
+                console.log(`[-] UID: ${uid}, IP: ${IP} -- Attempted to Delete a Meme with either an expired or bad sessid`);
+                return fail(500, { success: false, error: "An error occurred during upload" });
+            }
+
+            if (!mid || !tagString) return { success: false, error: "Invalid Data!" }
+            return await UpdateMeme(mid, tagString);
         } catch (e: any) {
             console.error("[-] Upload:", e);
             return fail(500, { success: false, error: "An error occurred during upload" });

@@ -13,6 +13,15 @@
     function clearResult() {
         error = warning = success = "";
     }
+
+    let lastAction = $state<'delete' | 'update' | ''>('');
+    let editing = $state<boolean>(false);
+    let ntagString = $state<string>("");
+    function Edit(mid: string, tagString: string) {
+        editing = true;
+        ntagString = tagString;
+    }
+    function CancelEdit() { editing = false; ntagString = ""; }
 </script>
 
 <Feedback {success} {warning} {error} />
@@ -32,35 +41,75 @@
                     />
                     <div class="card-body">
                         <div class="d-flex flex-wrap gap-1">
-                            {#each meme.tagString.split(',').map(t => t.trim()).filter(Boolean) as tag}
-                                <span class="badge bg-secondary">{tag}</span>
-                            {/each}
+                            {#if editing}
+                                <button class="btn btn-secondary" onclick={CancelEdit}>Cancel</button>
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm mb-2"
+                                    placeholder="tag1, tag2, tag3"
+                                    bind:value={ntagString}
+                                />
+                            {:else}
+                                {#each meme.tagString.split(',').map(t => t.trim()).filter(Boolean) as tag}
+                                    <span class="badge bg-secondary">{tag}</span>
+                                {/each}
+                            {/if}
                         </div>
                         {#if isAdmin}
-                            <form method="POST" use:enhance={() => {
-                                return async ({ result, update, cancel }) => {
-                                    if (!confirm('Are you sure you want to delete this?')) {
+                            <form
+                                method="POST"
+                                use:enhance={({ cancel }) => {
+                                    if (lastAction === 'delete' && !confirm('Are you sure you want to delete this?')) {
                                         cancel();
                                         return;
                                     }
-                                    
-                                    await update();
-                                    const data = await parseResult(result);
-
-                                    success = data.success;
-                                    warning = data.warning;
-                                    error = data.error;
-
-                                    if (result.type === "success" && result.data) {
-                                        await invalidateAll();
-                                        setTimeout(clearResult, 5000);
+                                    if (lastAction === 'update' && !confirm('Save these changes?')) {
+                                        cancel();
+                                        return;
                                     }
-                                };
-                            }}>
+
+                                    return async ({ result, update }) => {
+                                        await update();
+                                        const data = await parseResult(result);
+                                        
+                                        if (lastAction === 'update')
+                                            CancelEdit();
+
+                                        success = data.success;
+                                        warning = data.warning;
+                                        error = data.error;
+
+                                        if (result.type === "success" && result.data) {
+                                            await invalidateAll();
+                                            setTimeout(clearResult, 5000);
+                                        }
+                                    };
+                                }}
+                            >
                                 <input name="mid" value={meme.mid} hidden>
-                                <button type="submit" class="btn btn-danger" formaction="/admin?/delete_meme">
+                                <button
+                                    type="submit"
+                                    class="btn btn-danger"
+                                    formaction="/admin?/delete_meme"
+                                    onclick={() => lastAction = 'delete'}
+                                >
                                     Delete
                                 </button>
+                                {#if editing}
+                                    <input name="tagString" value={ntagString} hidden>
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary"
+                                        formaction="/admin?/update_meme"
+                                        onclick={() => lastAction = 'update'}
+                                    >
+                                        Update
+                                    </button>
+                                {:else}
+                                    <button class="btn btn-primary" onclick={() => { Edit(meme.mid, meme.tagString) }}>
+                                        Edit
+                                    </button>
+                                {/if}
                             </form>
                         {/if}
                     </div>

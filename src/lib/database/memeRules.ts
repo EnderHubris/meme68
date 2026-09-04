@@ -47,7 +47,19 @@ export async function DeleteMeme(mid: string) {
         await DeleteFile(`${meme.mid}${meme.fileExt}`);
         return { success: true, message: "Deleted Meme Successfully!" };
     } catch (e: any) {
-        console.error("[-] DeleteMemes:", e);
+        console.error("[-] DeleteMeme:", e);
+        return { success: false, message: "Error Occurred" }
+    }
+}
+
+export async function UpdateMeme(mid: string, tagString: string) {
+    try {
+        await db.update(schema.memes)
+                .set({ tagString: tagString })
+                .where(eq(schema.memes.mid, mid));
+        return { success: true, message: "Updated Meme Successfully!" };
+    } catch (e: any) {
+        console.error("[-] UpdateMeme:", e);
         return { success: false, message: "Error Occurred" }
     }
 }
