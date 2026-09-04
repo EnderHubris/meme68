@@ -49,6 +49,9 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
+      GROUP_SIZE: ${GROUP_SIZE}
+      UPLOADS_DIR: ${UPLOADS_DIR}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE}
       COOKIE_LIFETIME: ${COOKIE_LIFETIME}
     build:
       context: .

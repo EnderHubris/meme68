@@ -1,58 +1,66 @@
 <script lang="ts">
+    import Panel from "./panel.svelte";
+    import Users from "./users.panel.svelte";
+    import Admins from "./admins.panel.svelte";
+    import Upload from "./upload.panel.svelte";
+    import { onMount } from "svelte";
+
+    const TABS = [
+        "Home",
+        "Users",
+        "Admins",
+        "Uploads",
+    ]
     const { data } = $props();
+
+    let activePage = $state<string>(TABS[0].toLowerCase());
+
+    function changePage(name: string) {
+        for (const TAB of TABS) {
+            const elem = document.getElementById(TAB);
+            if (!elem) continue;
+            activePage = name.toLowerCase();
+            
+            if (TAB === name) {
+                elem.classList.add('active');
+            } else {
+                elem.classList.remove('active');
+            }
+        }
+    }
+    onMount( () => changePage(TABS[0]) );
 </script>
 
 <h1 class="text-center">Admin Panel</h1>
-<div class="container my-5 text-center" style="max-width: 500px;">
-    <div class="row g-3">
-        <div class="col-6">
-            <a href="/admin/upload" class="btn btn-primary btn-lg w-100 shadow">
-                Upload Memes
-            </a>
-        </div>
-        <div class="col-6">
-            <a
-                href="/admin/manage"
-                class="btn btn-secondary btn-lg w-100 shadow"
-            >
-                Manage Admins
-            </a>
-        </div>
-        <div class="col-6">
-            <button class="btn btn-secondary btn-lg w-100 shadow">
-                Update Meme of the Day
-            </button>
+<nav
+    class="navbar navbar-expand-lg"
+>
+    <div class="container-fluid">
+        <div
+            class="justify-content-md-center"
+        >
+            <ul class="navbar-nav">
+                {#each TABS as TAB}
+                    <li class="nav-item">
+                        <button id="{TAB}" class="nav-link" onclick={() => { changePage(TAB) }}>
+                            {TAB}
+                        </button>
+                    </li>
+                {/each}
+            </ul>
         </div>
     </div>
-</div>
+</nav>
 <hr />
 
-<div class="container my-5">
-    <div class="row g-4 justify-content-center">
-        <!-- Enjoyers Card -->
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title mb-4">
-                        Enjoyers ({data.users?.length ?? 0})
-                    </h5>
-                    <hr />
-                    <div class="row g-3">Display Users Here!</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recently Added Card -->
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title mb-4">Recently Added</h5>
-                    <hr />
-                    <div class="row g-3">
-                        Display Memes Here!
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{#if activePage === TABS[0].toLowerCase()}
+    <Panel memes={data.recentMemes} />
+{:else if activePage === TABS[1].toLowerCase()}
+    <Users users={ data.users }/>
+{:else if activePage === TABS[2].toLowerCase()}
+    <Admins admins={ data.admins }/>
+{:else if activePage === TABS[3].toLowerCase()}
+    <Upload />
+{:else}
+    <p>Unsure what to render...</p>
+{/if}

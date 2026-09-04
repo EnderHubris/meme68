@@ -25,6 +25,12 @@ export interface User {
     admin: boolean;
     likedMemes: string[];
 };
+export interface ViewableUser {
+    id: string;
+    username: string;
+    email: string;
+    createdAt: Date;
+};
 
 export interface UserSession {
     sid: string;

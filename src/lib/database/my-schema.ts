@@ -8,9 +8,9 @@ import {
 export const memes = mysqlTable("memes", {
     mid: varchar("mid", { length: 256 }).primaryKey(),
     fileExt: varchar("file_ext", { length: 8 }).notNull(),
-    likes: bigint("likes", { mode: "number", unsigned: true }).default(0),
+    likes: bigint("likes", { mode: "number", unsigned: true }).default(0).notNull(),
     tagString: text("tagString").notNull(),
-    createdAt: timestamp("created_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const memeOfTheDay = mysqlTable("meme_of_the_day", {

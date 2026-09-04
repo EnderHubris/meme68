@@ -1,3 +1,7 @@
+/**
+ * @description Handles user-related actions involving account creation and session handling
+ */
+
 import { db } from "./db";
 import {
     eq, and, or
@@ -32,19 +36,17 @@ export async function GetUserByID(id: string) {
         return undefined;
     }
 }
-export async function GetUserBySession(sessid: string) {
+export async function GetUserBySession(sessid: string | undefined | null) {
+    if (!sessid) return null;
+    
     try {
-        console.log(`[*] Finding User by sessid: ${sessid}`);
-
         const [session] = await db.select().from(schema.sessions)
             .where(eq(schema.sessions.sid, sessid));
         if (!session) {
-            console.log("[-] User not found!");
             return null;
         }
 
         if (await IsExpired(session)) {
-            console.log("[*] Discovered Expired Session:", sessid);
             return null;
         }
 
@@ -55,8 +57,6 @@ export async function GetUserBySession(sessid: string) {
             isAdmin: schema.users.admin,
             likedMemes: schema.users.likedMemes
         }).from(schema.users).where(eq(schema.users.id, session.uid));
-        
-        console.log(`[*] User Found: ${user.username}`);
 
         return user;
     } catch (e: any) {
@@ -67,7 +67,6 @@ export async function GetUserBySession(sessid: string) {
 
 async function DoesUserExist(username: string, email: string) {
     try {
-        console.log(`[*] Checking if either (${username}|${email}) are in use...`);
         const result = await db.select({id: schema.users.id})
             .from(schema.users)
             .where(
@@ -87,7 +86,6 @@ async function DoesUserExist(username: string, email: string) {
 export async function AddUser(username: string, email: string, password: string) {
     try {
         if (await DoesUserExist(username, email)) return false;
-        console.log("[*] Attempting to create a new user...");
 
         const passwordHash = Hash_SHA256(password);
         await db.insert(schema.users).values({
@@ -104,13 +102,10 @@ export async function AddUser(username: string, email: string, password: string)
 
 export async function CreateSession(IP: string, id: string) {
     try {
-        console.log("[*] Attempting to create new user session...");
         const sessid = GenerateSID(IP);
 
         const created_at = new Date();
         const expires_at = new Date(created_at.getTime() + cookieLifeTime * 1000);
-
-        console.log(` |___ ${created_at.getTime()} >= ${expires_at.getTime()}`);
     
         // link sessid to user id
         await db.insert(schema.sessions).values({
@@ -119,8 +114,6 @@ export async function CreateSession(IP: string, id: string) {
             createdAt: created_at,
             expiresAt: expires_at
         });
-
-        console.log("[*] Session Created:", sessid);
     
         return sessid;
     } catch (e: any) {
@@ -131,8 +124,6 @@ export async function CreateSession(IP: string, id: string) {
 
 export async function LoginUser(IP: string, username: string, password: string) {
     try {
-        console.log("[*] Attempting to authenticate user...");
-
         const passwordHash = Hash_SHA256(password);
         const user = await db.select({ id: schema.users.id })
             .from(schema.users)
@@ -158,7 +149,6 @@ export async function LoginUser(IP: string, username: string, password: string) 
 
 export async function DeleteSession(sessid: string) {
     try {
-        console.log("[*] Deleting Session:", sessid);
         await db.delete(schema.sessions).where(eq(schema.sessions.sid, sessid));
     } catch (e: any) {
         console.error("[-] DeleteSession:", e);

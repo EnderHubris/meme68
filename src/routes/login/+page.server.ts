@@ -3,9 +3,9 @@ import { LoginUser } from "$lib/database/userRules.js";
 import { CheckCookies, cookieLifeTime } from "$lib/server_utils";
 import { fail, redirect, isRedirect } from "@sveltejs/kit";
 
-export const load = async ({ cookies, getClientAddress }) => {
+export const load = async ({ cookies }) => {
     // if cookies are valid and present go back to home
-    if (await CheckCookies({ cookies, getClientAddress }))
+    if (await CheckCookies(cookies))
         throw redirect(303, "/");
 };
 
