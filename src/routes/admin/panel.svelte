@@ -6,5 +6,5 @@
 </script>
 
 <div class="container my-5">
-    <MemesDisplay memes={memes} isAdmin={true} />
+    <MemesDisplay memes={memes} />
 </div>

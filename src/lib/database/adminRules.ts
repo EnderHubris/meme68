@@ -3,9 +3,7 @@
  */
 
 import { db } from "./db";
-import {
-    eq, and, or
-} from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as schema from "./my-schema";
 
 export async function GetUsers() {

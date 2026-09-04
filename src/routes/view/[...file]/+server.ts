@@ -39,7 +39,7 @@ export const GET = async ({ params }) => {
         if (isRedirect(e) || isHttpError(e))
             throw e;
 
-        console.log("[-] View:", e);
-        throw error(404, "File not found.");
+        console.error("[-] View:", e);
+        throw error(500, 'Error Occurred');
     }
 };
